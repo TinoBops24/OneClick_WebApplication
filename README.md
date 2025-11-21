@@ -1,36 +1,49 @@
-﻿N.B please do not commit any changes without first checking with the team.
+﻿OneClick WebApp
+This is a full-stack e-commerce platform built using ASP.NET Core Razor Pages with Firebase. The goal is to help businesses move online and connect their website with their in-store systems.
 
-Follow these steps to get the project running locally:
 
-1. **Copy configuration templates**  
-   Duplicate the following template files and rename them:
-   - `appsettings.Template.json` → `appsettings.json`  
-   - `appsettings.Development.Template.json` → `appsettings.Development.json`
+Overview
+The platform pulls all product information from the business’s ERP system and displays it on the website. When a customer places an order on the site or through WhatsApp, the order is sent straight to the POS system so staff can process it. This keeps online and in-store operations in sync.
+The system supports two main groups of users: ERP users (admins, managers, and staff) and normal online customers.
 
-2. **Insert actual settings and secrets**  
-   Populate the copied configuration files with the required project values such as:
-   - Firebase API keys
-   - Database configuration
-   - Any other secrets or environment-specific settings
 
-3. **Enable the Secret Manager**
-•	Open the Package Manager Console.
-•	Run this command:
-    "dotnet user-secrets init"
-•	This will add a <UserSecretsId> tag to your .csproj file, linking it to a secrets.json file on your machine.
+Key Features
+Authentication and Authorisation:
+•	Session-based authentication using Firebase
+•	Role-based access (Admin, Manager, Staff, Customer)
+•	Permission rules for managing orders, reports, and users
 
-4. **Get Your Firebase Private Key**
-•	Go to the Firebase Console and select your project.
-•	Click the ⚙️ gear icon and go to Project settings.
-•	Go to the Service accounts tab.
-•	Click the "Generate new private key" button. A .json file will be downloaded.
-   
-5. **Store the Key File Securely**
-•	Create a folder outside of your project's Git repository to store your keys. For example: C:\FirebaseKeys\ or ~/Documents/FirebaseKeys/.
-•	Move the downloaded .json file into this new folder.
+E-Commerce Features:
+•	Product catalogue that comes directly from the ERP
+•	Real-time inventory updates
+•	Shopping cart and wishlist
+•	Order placement and tracking
+•	Orders sent automatically to the POS system
+•	Branch-level stock visibility
 
-6. **Set the Secret**
-•	Go back to Package Manager Console.
-•	Run the following command, replacing the example path with the actual path to your key file:
+Admin and Management Tools:
+•	Admin dashboard for products, orders, and users
+•	Content management for editing website pages
+•	POS system integration for online order processing
+•	Sales reports
 
-**dotnet user-secrets set "Firebase:PrivateKeyFilePath" "C:\FirebaseKeys\your-project-name-firebase-adminsdk.json"**
+Performance Improvements:
+•	Output caching for products and static pages
+•	Memory caching for frequently used data
+
+AI Integration (In Progress):
+•	Simple customer service chatbot using the Groq API
+
+Technology Stack:
+•	ASP.NET Core 8.0 Razor Pages
+
+Database: 
+•	Google Cloud Firestore
+•	Firebase Auth with custom session handling
+•	Firebase Storage
+
+
+Architecture
+The project uses a service-based structure.
+Controllers handle API calls, Middleware manages authentication, Models define the data, and Services handle Firebase work, ERP syncing, cart logic, and POS communication.
+
