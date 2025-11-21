@@ -219,8 +219,8 @@ namespace OneClick_WebApp.Pages
         {
             try
             {
-                // NOTE: In production, store this API key in appsettings.json or environment variables
-                var apiKey = "AIzaSyBzkRHYkoGavY1pokTPp0L_qCAZee_6Pks";
+                
+                var apiKey = " ";
                 var url = $"https://maps.googleapis.com/maps/api/geocode/json?address={Uri.EscapeDataString(location)}&key={apiKey}";
 
                 using var httpClient = _httpClientFactory.CreateClient();

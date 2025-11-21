@@ -104,7 +104,7 @@ namespace OneClick_WebApp.Services
                 try
                 {
                     // Get Firebase Web API key from configuration
-                    var firebaseApiKey = "AIzaSyBukriN67mHi3EYKOwQ3NkaqL0lZB48d4U"; 
+                    var firebaseApiKey = " "; 
 
                     if (string.IsNullOrEmpty(firebaseApiKey) || firebaseApiKey == "YOUR_FIREBASE_WEB_API_KEY")
                     {
