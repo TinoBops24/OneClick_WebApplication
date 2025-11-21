@@ -7,6 +7,8 @@ The system supports two main groups of users: ERP users (admins, managers, and s
 
 
 Key Features
+
+
 Authentication and Authorisation:
 •	Session-based authentication using Firebase
 •	Role-based access (Admin, Manager, Staff, Customer)
