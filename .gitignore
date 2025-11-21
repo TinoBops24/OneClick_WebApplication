@@ -1,0 +1,27 @@
+﻿## Ignore Visual Studio files
+.vs/
+*.user
+*.suo
+
+## Ignore build results
+[Bb]in/
+[Oo]bj/
+
+## Ignore config and secrets
+appsettings.json
+appsettings.Development.json
+secrets.json
+firebase-adminsdk*.json
+
+## Ignore OS and IDE artifacts
+Thumbs.db
+.DS_Store
+*.sln.docstates
+
+## Git
+*.orig
+
+## Optional security
+.env
+*.pfx
+

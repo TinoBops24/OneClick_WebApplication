@@ -1,0 +1,1224 @@
+﻿@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@using OneClick_WebApp.Models.ViewModel
+@using OneClick_WebApp.Helpers
+@using System.Linq
+@using System.Text.Json
+@inject OneClick_WebApp.Services.FirebaseDbService DbService
+@{
+    // Load branch configuration for dynamic company name and logo
+    var branchConfig = await DbService.GetBranchConfigurationAsync();
+    var companyName = branchConfig?.CompanyName ?? "Commerce Craft Pharmacy";
+    var logoUrl = branchConfig?.LogoUrl ?? "/images/default-logo.png";
+    
+    // Split company name into parts for styling
+    var nameParts = companyName.Split(' ');
+    var firstPart = nameParts.Length > 0 ? string.Join(" ", nameParts.Take(nameParts.Length - 1)) : companyName;
+    var lastPart = nameParts.Length > 1 ? nameParts.Last() : "";
+    
+    // Set ViewData for use in styles
+    ViewData["LogoUrl"] = logoUrl;
+    // ViewData["PrimaryColour"] = branchConfig?.PrimaryColour ?? "#1e40af";
+    // ViewData["SecondaryColour"] = branchConfig?.SecondaryColour ?? "#6c757d";
+
+    var categorySnapshot = await DbService.GetCollection("category").GetSnapshotAsync();
+    var categories = categorySnapshot.Documents
+        .Select(doc => new { Id = doc.Id, Name = doc.GetValue<string>("Name") })
+        .OrderBy(c => c.Name)
+        .ToList();
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - OneClick_WebApp</title>
+
+    <!-- Caching, Preloading, and Performance Optimizations are preserved -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/OneClick_WebApp.styles.css" asp-append-version="true" />
+    <!-- Loading Animations -->
+    <link rel="stylesheet" href="~/css/loading-animations.css" />
+    <!-- Loading Manager Script -->
+    <script src="~/js/loading-manager.js"></script>
+    @await RenderSectionAsync("Styles", required: false)
+    @RenderSection("Preload", required: false)
+
+    <style>
+        /* HOMEPAGE ONLY: */
+        body.homepage {
+            padding-top: 160px; /* space for header */
+            background: url('/images/Background.png') no-repeat center center fixed;
+            background-size: cover;
+            color: #212529;
+        }
+
+        /* Default body styling for other pages */
+        body:not(.homepage):not(.auth-page) {
+            padding-top: 160px;
+            background: #ffffff;
+            color: #212529;
+        }
+
+        /* Auth pages (Login/Register) background */
+        body.auth-page {
+            padding-top: 120px;
+            background: url('/images/Background.png') no-repeat center center fixed;
+            background-size: cover;
+            color: #212529;
+        }
+
+        :root {
+            --primary-color: @(ViewData["PrimaryColour"] ?? "#1e40af");
+            --secondary-color: @(ViewData["SecondaryColour"] ?? "#6c757d");
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .container main[role="main"] {
+            margin-bottom: 3rem; 
+            min-height: 60vh; 
+        }
+
+        /* For specific page types that need more space */
+        body.homepage .container main[role="main"] {
+            margin-bottom: 4rem;
+        }
+
+      
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .main-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content-area {
+            flex: 1;
+        }
+
+        /* Mobile adjustments */
+        @@media (max-width: 768px) {
+            .container main[role="main"]
+
+        {
+            margin-bottom: 2rem;
+        }
+
+        body.homepage .container main[role="main"] {
+            margin-bottom: 2.5rem;
+        }
+
+        }
+        /* Chat Widget Styles - Complete from Original */
+        .chat-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1050;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        .chat-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 50%;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+            font-size: 24px;
+            border: none;
+            position: relative;
+        }
+
+        /* Chat Welcome Tooltip */
+        .chat-welcome-tooltip {
+            position: absolute;
+            bottom: 80px;
+            right: 20px;
+            transform: none;
+            background-color: #fff;
+            color: #111;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            width: 260px;
+            text-align: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1100;
+        }
+
+            .chat-welcome-tooltip::after {
+                content: '';
+                position: absolute;
+                top: 100%;
+                right: 20px;
+                border: 8px solid transparent;
+                border-top-color: white;
+            }
+
+            .chat-welcome-tooltip::before {
+                content: '';
+                position: absolute;
+                top: 100%;
+                right: 19px;
+                border: 9px solid transparent;
+                border-top-color: #e5e7eb;
+                z-index: -1;
+            }
+
+        .chat-icon:hover .chat-welcome-tooltip {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .chat-icon:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.25);
+        }
+
+        .chat-icon.pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @@keyframes pulse {
+            0%
+
+        {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        50% {
+            box-shadow: 0 4px 20px var(--primary-color);
+        }
+
+        100% {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        }
+
+        .notification-dot {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 20px;
+            height: 20px;
+            background: #ef4444;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+            border: 2px solid white;
+        }
+
+        .chat-widget {
+            width: 350px;
+            height: 450px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            transform: scale(0.8);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid #e5e7eb;
+        }
+
+            .chat-widget.show {
+                display: flex;
+                transform: scale(1);
+                opacity: 1;
+            }
+
+        .chat-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .chat-header-info h4 {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 0 2px 0;
+        }
+
+        .chat-header-info p {
+            font-size: 12px;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        .chat-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background-color 0.2s;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .chat-close:hover {
+                background-color: rgba(255, 255, 255, 0.2);
+            }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+            background: #f8fafc;
+        }
+
+            .chat-messages::-webkit-scrollbar {
+                width: 4px;
+            }
+
+            .chat-messages::-webkit-scrollbar-thumb {
+                background: rgba(0, 0, 0, 0.1);
+                border-radius: 2px;
+            }
+
+        .message {
+            margin-bottom: 16px;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @@keyframes slideUp {
+            from
+
+        {
+            opacity: 0;
+            transform: translateY(15px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        }
+
+        .message-user {
+            text-align: right;
+        }
+
+        .message-bubble {
+            display: inline-block;
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .message-user .message-bubble {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-bottom-right-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .message-bot .message-bubble {
+            background: white;
+            color: #374151;
+            border-bottom-left-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e5e7eb;
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            border-radius: 0 0 20px 20px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .chat-input {
+            flex: 1;
+            border: 2px solid #e5e7eb;
+            border-radius: 25px;
+            padding: 12px 18px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+            background: #f9fafb;
+        }
+
+            .chat-input:focus {
+                border-color: var(--primary-color);
+                background: white;
+                box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+            }
+
+        .send-btn {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+            .send-btn:hover {
+                transform: scale(1.05);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            }
+
+            .send-btn:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+                transform: none;
+            }
+
+        .typing {
+            display: none;
+            background: white;
+            padding: 12px 16px;
+            border-radius: 18px;
+            border-bottom-left-radius: 6px;
+            max-width: 70px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e5e7eb;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: #9ca3af;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+
+            .typing-dot:nth-child(1) {
+                animation-delay: -0.32s;
+            }
+
+            .typing-dot:nth-child(2) {
+                animation-delay: -0.16s;
+            }
+
+        @@keyframes bounce {
+            0%, 80%, 100%
+
+        {
+            transform: scale(0.6);
+            opacity: 0.5;
+        }
+
+        40% {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        }
+
+        /* Enhanced Header Styles */
+        .header-top {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #3b82f6 100%);
+            color: white;
+            padding: 8px 0;
+            font-size: 0.875rem;
+            text-align: center;
+            border-radius: 0 0 20px 20px;
+        }
+
+        .main-header {
+            background: white;
+            border-radius: 40px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            position: fixed;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 95%;
+            z-index: 1030;
+            transition: all 0.3s ease;
+            padding: 12px 24px;
+        }
+
+        .pharmacy-logo {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            line-height: 1.2;
+        }
+
+            .pharmacy-logo:hover {
+                color: #1e3a8a;
+                text-decoration: none;
+            }
+
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .search-container {
+            position: relative;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .search-input {
+            border: 2px solid #e5e7eb;
+            border-radius: 25px;
+            padding: 12px 50px 12px 20px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            width: 100%;
+            background: white;
+            color: #374151;
+        }
+
+            .search-input::placeholder {
+                color: #6b7280;
+            }
+
+            .search-input:focus {
+                border-color: #3b82f6;
+                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+                outline: none;
+            }
+
+        .search-btn {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--primary-color);
+            border: none;
+            border-radius: 20px;
+            width: 40px;
+            height: 40px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+            .search-btn:hover {
+                background: #1e3a8a;
+            }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .cart-trigger, .account-trigger {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 10px 15px;
+            background: none;
+            border: none;
+            color: #374151;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+            .cart-trigger:hover, .account-trigger:hover {
+                background: #f3f4f6;
+                color: var(--primary-color);
+                text-decoration: none;
+            }
+
+        .cart-badge, .wishlist-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #dc2626;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .trust-badges {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.8rem;
+        }
+
+        .trust-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            color: white;
+        }
+
+        /* Enhanced Dropdown Styles */
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            padding: 0.5rem 0;
+            margin-top: 0.5rem;
+        }
+
+        .dropdown-menu-wide {
+            min-width: 600px;
+        }
+
+        .dropdown-item {
+            padding: 8px 16px;
+            transition: all 0.3s ease;
+            border-radius: 4px;
+            margin: 0 8px;
+        }
+
+            .dropdown-item:hover {
+                background: #f8fafc;
+                color: var(--primary-color);
+                transform: translateX(4px);
+            }
+
+        .dropdown-header {
+            color: var(--primary-color);
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 8px 16px;
+            margin-bottom: 4px;
+        }
+
+        .nav-link:hover {
+            color: var(--primary-color) !important;
+            transform: translateY(-1px);
+        }
+
+        .navbar-nav .nav-link {
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+            .btn-primary:hover {
+                opacity: 0.9;
+                background-color: var(--primary-color);
+                border-color: var(--primary-color);
+            }
+
+        /* Mobile responsiveness */
+        @@media (max-width: 768px) {
+            .chat-container
+
+        {
+            bottom: 15px;
+            right: 15px;
+        }
+
+        .chat-widget {
+            width: calc(100vw - 30px);
+            max-width: 350px;
+            height: 400px;
+        }
+
+        .header-top {
+            display: none;
+        }
+
+        body.homepage {
+            padding-top: 160px;
+            background: url('/images/Background.png') no-repeat center center fixed;
+            background-size: cover;
+            color: #212529;
+        }
+
+        body.auth-page {
+            padding-top: 120px;
+            background: url('/images/Background.png') no-repeat center center fixed;
+            background-size: cover;
+            color: #212529;
+        }
+
+        body:not(.homepage):not(.auth-page) {
+            padding-top: 120px;
+            background: #ffffff;
+            color: #212529;
+        }
+
+        .search-container {
+            order: 3;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .main-header .container {
+            flex-wrap: wrap;
+        }
+
+        .header-actions {
+            gap: 0.5rem;
+        }
+
+        }
+    </style>
+</head>
+<body class="@(ViewData["Title"]?.ToString() == "Home" ? "homepage" :
+              ViewData["Title"]?.ToString() == "Log In" || ViewData["Title"]?.ToString() == "Register" || ViewData["Title"]?.ToString() == "Set Your Password" ? "auth-page" :
+              "")">
+    <header class="main-header">
+        <!-- Top Header Bar -->
+        <div class="header-top">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <div class="trust-badges">
+                            <span class="trust-badge">
+                                <i class="fas fa-shield-alt"></i>
+                                Secure Checkout
+                            </span>
+                            <span class="trust-badge">
+                                <i class="fas fa-truck"></i>
+                                Free Delivery Over R500
+                            </span>
+                            <span class="trust-badge">
+                                <i class="fas fa-phone"></i>
+                                24/7 Support
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <small>
+                            <i class="fas fa-map-marker-alt"></i>
+                            Licensed Pharmacy | Cape Town, SA
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Navigation -->
+        <nav class="navbar navbar-expand-lg">
+            <div class="container">
+                <a href="/" class="pharmacy-logo">
+                    <img src="@logoUrl" alt="@companyName" style="height: 59px;" loading="eager" />
+                    <div class="logo-text">
+                        @if (!string.IsNullOrEmpty(firstPart))
+                        {
+                            <span style="font-size: 1.2rem; font-weight: 700;">@firstPart</span>
+                        }
+                        @if (!string.IsNullOrEmpty(lastPart))
+                        {
+                            <span style="font-size: 1rem; font-weight: 600; color: #6b7280;">@lastPart</span>
+                        }
+                        else if (string.IsNullOrEmpty(firstPart))
+                        {
+                            <span style="font-size: 1.2rem; font-weight: 700;">@companyName</span>
+                        }
+                    </div>
+                </a>
+
+                <!-- Primary Navigation Links -->
+                <div class="d-none d-lg-flex align-items-center mx-3">
+                    <nav class="navbar-nav flex-row gap-3">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle fw-semibold px-2" href="#" role="button" data-bs-toggle="dropdown" style="color: #374151;" data-no-loading>
+                                <i class="fas fa-store me-1"></i>Shop
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="/Products/Index">
+                                        <i class="fas fa-th-large me-2"></i>All Products
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                @foreach (var category in categories)
+                                {
+                                    <li>
+                                        <a class="dropdown-item" href="/Products/Index?categoryFilter=@category.Id">
+                                            @category.Name
+                                        </a>
+                                    </li>
+                                }
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle fw-semibold px-2" href="#" role="button" data-bs-toggle="dropdown" style="color: #374151;" data-no-loading>
+                                <i class="fas fa-sort-alpha-down me-1"></i>Products A-Z
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" href="/Products/Index?SortOrder=name_asc">
+                                        <i class="fas fa-sort-alpha-down me-2"></i>View All Products A-Z
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="/Products/Index?SortOrder=price_asc">
+                                        <i class="fas fa-sort-amount-down me-2"></i>View All Products by Price
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link fw-semibold px-2" href="/About" style="color: #374151;">
+                                <i class="fas fa-info-circle me-1"></i>About
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link fw-semibold px-2" href="/Contact" style="color: #374151;">
+                                <i class="fas fa-phone me-1"></i>Contact
+                            </a>
+                        </li>
+                    </nav>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="search-container mx-3 d-none d-md-block">
+                    <form method="get" action="/Products/Index">
+                        <div class="position-relative">
+                            <input type="text"
+                                   name="searchTerm"
+                                   class="search-input"
+                                   placeholder="Search products..."
+                                   value="@Context.Request.Query["searchTerm"]">
+                            <button type="submit" class="search-btn">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Header Actions -->
+                <div class="header-actions">
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <!-- Wishlist -->
+                        <a href="/Wishlist/Index" class="cart-trigger">
+                            <i class="fas fa-heart fs-5"></i>
+                            <span id="wishlistBadge" class="wishlist-badge" style="display: none;"></span>
+                        </a>
+
+                        <!-- Shopping Cart -->
+                        <a href="/Cart/Index" class="cart-trigger">
+                            <i class="fas fa-shopping-bag fs-5"></i>
+                            <span id="cartBadge" class="cart-badge" style="display: none;"></span>
+                        </a>
+
+                        <!-- Account Dropdown -->
+                        <div class="dropdown">
+                            <button class="account-trigger dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle fs-5"></i>
+                                <div class="d-none d-lg-block text-start ms-2">
+                                    <div class="small text-muted">Hello,</div>
+                                    <div class="fw-bold">@(User.Identity?.Name?.Split('@')[0]?.Split('.')[0]?.Split(' ')[0] ?? "User")</div>
+                                </div>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="/Account/Profile">
+                                        <i class="fas fa-user me-2"></i>My Profile
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="/Account/OrderHistory">
+                                        <i class="fas fa-clock me-2"></i>Order History
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="/Wishlist/Index">
+                                        <i class="fas fa-heart me-2"></i>Wishlist
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                @if (User.HasClaim("role", "Admin"))
+                                {
+                                    <li>
+                                        <a class="dropdown-item" href="/Admin/Dashboard">
+                                            <i class="fas fa-tachometer-alt me-2"></i>Admin Panel
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                }
+                                <li>
+                                    <a class="dropdown-item" href="/Account/Logout">
+                                        <i class="fas fa-sign-out-alt me-2"></i>Sign Out
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="d-flex gap-2">
+                            <a href="/Account/Login" class="btn btn-outline-primary btn-sm px-3">Login</a>
+                            <a href="/Account/Register" class="btn btn-primary btn-sm px-3">Register</a>
+                        </div>
+                    }
+
+                    <!-- Mobile Menu Toggle -->
+                    <button class="navbar-toggler d-lg-none ms-2" type="button" data-bs-toggle="collapse" data-bs-target="#mobileNav">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+
+                <!-- Mobile Search -->
+                <div class="search-container d-md-none mt-3 w-100">
+                    <form method="get" action="/Products/Index">
+                        <div class="position-relative">
+                            <input type="text"
+                                   name="searchTerm"
+                                   class="search-input"
+                                   placeholder="Search products..."
+                                   value="@Context.Request.Query["searchTerm"]">
+                            <button type="submit" class="search-btn">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Mobile Navigation -->
+        <div class="collapse" id="mobileNav">
+            <div class="container">
+                <div class="d-flex flex-column gap-2 py-3">
+                    <h6 class="text-muted mb-2">Shop Categories</h6>
+                    <a href="/Products/Index" class="text-decoration-none">All Products</a>
+                    @foreach (var category in categories)
+                    {
+                        <a href="/Products/Index?categoryFilter=@category.Id" class="text-decoration-none">@category.Name</a>
+                    }
+                    <hr class="my-2">
+                    <h6 class="text-muted mb-2">Pages</h6>
+                    <a href="/About" class="text-decoration-none">About Us</a>
+                    <a href="/Contact" class="text-decoration-none">Contact Us</a>
+                    <a href="/Products/Brands" class="text-decoration-none">All Brands A-Z</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <!-- Chat Container -->
+    <div class="chat-container">
+        <button class="chat-icon" id="chatIcon" type="button" aria-label="Open chat">
+            <i class="fas fa-comments"></i>
+            <div class="notification-dot" id="notificationDot">1</div>
+            <div class="chat-welcome-tooltip">
+                Hi there! Need help? Chat with our AI assistant here.
+            </div>
+        </button>
+
+        <div class="chat-widget" id="chatWidget">
+            <div class="chat-header">
+                <div class="chat-header-info">
+                    <h4>Chat Assistant</h4>
+                    <p>Online • Ready to help</p>
+                </div>
+                <button class="chat-close" id="chatClose" type="button" aria-label="Close chat">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="chat-messages" id="messages">
+                <div class="message message-bot">
+                    <div class="message-bubble">
+                        Hi! I'm here to help you with any questions about our pharmacy products and services. How can I assist you today?
+                    </div>
+                </div>
+
+                <div class="typing" id="typing">
+                    <div class="typing-dots">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-input-container">
+                <div class="input-group">
+                    <input type="text" class="chat-input" id="chatInput" placeholder="Type your message..." />
+                    <button class="send-btn" id="sendBtn" type="button" aria-label="Send message">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer (Dynamic from Partial) -->
+    @await Html.PartialAsync("_Footer")
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        function refreshCartAndWishlistBadges() {
+            try {
+                const cartData = JSON.parse(sessionStorage.getItem("cart")) || [];
+                const cartBadge = document.getElementById('cartBadge');
+                if (cartBadge) {
+                    const totalItems = cartData.reduce((sum, item) => sum + (item.Quantity || item.quantity || 0), 0);
+                    if (totalItems > 0) {
+                        cartBadge.textContent = totalItems;
+                        cartBadge.style.display = 'flex';
+                    } else {
+                        cartBadge.style.display = 'none';
+                    }
+                }
+            } catch (e) {
+                console.error("Could not parse cart data.", e);
+            }
+
+            try {
+                const wishlistData = JSON.parse(sessionStorage.getItem("wishlist")) || [];
+                const wishlistBadge = document.getElementById('wishlistBadge');
+                if (wishlistBadge) {
+                    const totalItems = wishlistData.length;
+                    if (totalItems > 0) {
+                        wishlistBadge.textContent = totalItems;
+                        wishlistBadge.style.display = 'flex';
+                    } else {
+                        wishlistBadge.style.display = 'none';
+                    }
+                }
+            } catch (e) {
+                console.error("Could not parse wishlist data.", e);
+            }
+        }
+
+        function refreshHeaderBadges() {
+            refreshCartAndWishlistBadges();
+        }
+
+        // Chat Widget Functionality
+        document.addEventListener('DOMContentLoaded', function () {
+            const chatIcon = document.getElementById("chatIcon");
+            const chatWidget = document.getElementById("chatWidget");
+            const chatClose = document.getElementById("chatClose");
+            const messages = document.getElementById("messages");
+            const chatInput = document.getElementById("chatInput");
+            const sendBtn = document.getElementById("sendBtn");
+            const typing = document.getElementById("typing");
+            const notificationDot = document.getElementById("notificationDot");
+
+            let isOpen = false;
+            let messageCount = 0;
+
+            if (chatIcon && chatWidget && chatClose && messages && chatInput && sendBtn && typing && notificationDot) {
+
+                function toggleChat() {
+                    isOpen = !isOpen;
+                    if (isOpen) {
+                        chatIcon.style.display = 'none';
+                        chatWidget.classList.add('show');
+                        setTimeout(() => {
+                            if (chatInput) chatInput.focus();
+                        }, 300);
+                        notificationDot.style.display = 'none';
+                        chatIcon.classList.remove('pulse');
+                        messageCount = 0;
+                    } else {
+                        chatWidget.classList.remove('show');
+                        setTimeout(() => {
+                            chatIcon.style.display = 'flex';
+                        }, 300);
+                    }
+                }
+
+                chatIcon.addEventListener('click', toggleChat);
+                chatClose.addEventListener('click', toggleChat);
+
+                function addMessage(text, isUser) {
+                    if (!messages || !typing) return;
+
+                    const div = document.createElement("div");
+                    div.className = `message ${isUser ? 'message-user' : 'message-bot'}`;
+                    div.innerHTML = `<div class="message-bubble">${text}</div>`;
+                    messages.insertBefore(div, typing);
+                    messages.scrollTop = messages.scrollHeight;
+
+                    if (!isOpen && !isUser) {
+                        messageCount++;
+                        if (notificationDot) {
+                            notificationDot.textContent = messageCount;
+                            notificationDot.style.display = 'flex';
+                        }
+                        if (chatIcon) {
+                            chatIcon.classList.add('pulse');
+                        }
+                    }
+                }
+
+                async function sendMessage() {
+                    if (!chatInput || !sendBtn || !typing) return;
+
+                    const text = chatInput.value.trim();
+                    if (!text || chatInput.disabled) return;
+
+                    addMessage(text, true);
+                    chatInput.value = "";
+                    chatInput.disabled = true;
+                    sendBtn.disabled = true;
+
+                    typing.style.display = "block";
+                    if (messages) messages.scrollTop = messages.scrollHeight;
+
+                    try {
+                        const res = await fetch("/api/Chat", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Accept": "application/json",
+                                "X-Requested-With": "XMLHttpRequest"
+                            },
+                            body: JSON.stringify({ Message: text })
+                        });
+
+                        if (!res.ok) {
+                            const errorText = await res.text();
+                            console.error('Error response:', errorText);
+                            throw new Error(`HTTP ${res.status}: ${errorText}`);
+                        }
+
+                        const data = await res.json();
+                        typing.style.display = "none";
+                        addMessage(data.reply || "Sorry, I didn't get a proper response.", false);
+
+                    } catch (error) {
+                        typing.style.display = "none";
+                        console.error("Chat error details:", error);
+
+                        let errorMsg = "Sorry, I'm having trouble connecting right now.";
+                        if (error.message.includes('404')) {
+                            errorMsg = "Chat service not found. Please contact support.";
+                        } else if (error.message.includes('500')) {
+                            errorMsg = "Server error. Please try again in a moment.";
+                        } else if (error.message.includes('Failed to fetch')) {
+                            errorMsg = "Network error. Please check your connection.";
+                        }
+
+                        addMessage(errorMsg, false);
+                    } finally {
+                        setTimeout(() => {
+                            if (chatInput && sendBtn) {
+                                chatInput.disabled = false;
+                                sendBtn.disabled = false;
+                                if (isOpen) chatInput.focus();
+                            }
+                        }, 100);
+                    }
+                }
+
+                sendBtn.addEventListener('click', sendMessage);
+
+                chatInput.addEventListener('keypress', function (e) {
+                    if (e.key === 'Enter' && !chatInput.disabled) {
+                        e.preventDefault();
+                        sendMessage();
+                    }
+                });
+
+                notificationDot.style.display = 'none';
+            }
+
+            // Initialize badges
+        @if (User.Identity.IsAuthenticated)
+        {
+            <text>
+                            const initialCartDataFromServer = @Html.Raw(Model.InitialCartJson);
+                            const initialWishlistDataFromServer = @Html.Raw(Model.InitialWishlistJson);
+                            sessionStorage.setItem("cart", JSON.stringify(initialCartDataFromServer));
+                            sessionStorage.setItem("wishlist", JSON.stringify(initialWishlistDataFromServer));
+            </text>
+        }
+        else
+        {
+            <text>
+                            sessionStorage.setItem("cart", "[]");
+                            sessionStorage.setItem("wishlist", "[]");
+            </text>
+        }
+
+            refreshCartAndWishlistBadges();
+            window.refreshCartAndWishlistBadges = refreshCartAndWishlistBadges;
+            window.refreshHeaderBadges = refreshHeaderBadges;
+        });
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

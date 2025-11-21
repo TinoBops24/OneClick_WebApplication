@@ -1,0 +1,372 @@
+﻿@page
+@model OneClick_WebApp.Pages.Admin.IndexModel
+@attribute [Authorize(Policy = "AdminOnly")]
+@{
+    ViewData["Title"] = "Site Configuration";
+    ViewData["Subtitle"] = "Manage branding, theming, and page content";
+    Layout = "_AdminLayout";
+}
+@* <!-- Firebase Config Meta Tags (for client-side use) -->
+<meta name="firebase-api-key" content="@Model.FirebaseApiKey" />
+<meta name="firebase-auth-domain" content="@Model.FirebaseAuthDomain" />
+<meta name="firebase-project-id" content="@Model.FirebaseProjectId" />
+<meta name="firebase-storage-bucket" content="@Model.FirebaseStorageBucket" /> *@
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            @* <h1 class="fw-bold text-primary">@ViewData["Title"]</h1>
+            <p class="text-muted">Manage branding, theming, and page content in one place.</p> *@
+        </div>
+        <i class="bi bi-gear-fill fs-2 text-secondary"></i>
+    </div>
+
+    @if (TempData["AdminSuccessMessage"] != null)
+    {
+        <div class="alert alert-success d-flex align-items-center shadow-sm rounded-3" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["AdminSuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["AdminErrorMessage"] != null)
+    {
+        <div class="alert alert-danger d-flex align-items-center shadow-sm rounded-3" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["AdminErrorMessage"]
+        </div>
+    }
+
+    <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <!-- Keep the current logo URL on postbacks -->
+        <input type="hidden" asp-for="CurrentLogoUrl" />
+
+        <!-- === SECTION 1: Branding & Information === -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-building me-2"></i>Branding & Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Input.CompanyName" class="form-label">Company Name <span class="text-danger">*</span></label>
+                        <input asp-for="Input.CompanyName" class="form-control" required
+                               pattern="^[a-zA-Z0-9\s\-\.\,\&\'\(\)]+$"
+                               minlength="2" maxlength="120"
+                               title="Company name can only contain letters, numbers, spaces, and common punctuation" />
+                        <span asp-validation-for="Input.CompanyName" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Input.Phone" class="form-label">Phone</label>
+                        <input asp-for="Input.Phone" class="form-control" type="tel"
+                               placeholder="+27821234567 or 0821234567"
+                               pattern="^(\+(?:27|258)\d{9}|0[1-8]\d{8}|8[2-7]\d{7})$"
+                               title="Enter a valid South African (+27) or Mozambican (+258) phone number" />
+                        <span asp-validation-for="Input.Phone" class="text-danger"></span>
+                        <small class="text-muted">SA: +27 or 0xx | Mozambique: +258 or 8x</small>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Input.Description" class="form-label">Description</label>
+                    <textarea asp-for="Input.Description" class="form-control" rows="3" maxlength="500"></textarea>
+                    <span asp-validation-for="Input.Description" class="text-danger"></span>
+                    <small class="text-muted">Maximum 500 characters</small>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Input.SocialMediaLink" class="form-label">Main Social Media Link</label>
+                    <input asp-for="Input.SocialMediaLink" class="form-control" type="url"
+                           placeholder="https://twitter.com/yourcompany"
+                           pattern="https?://.*"
+                           title="URL must start with http:// or https://" />
+                    <span asp-validation-for="Input.SocialMediaLink" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- === SECTION 2: Theming & Logo === -->
+        <div class="card mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="bi bi-palette me-2"></i>Theming & Logo</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Input.PrimaryColour" class="form-label">Primary Colour <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="color" asp-for="Input.PrimaryColour" class="form-control form-control-color" required />
+                            <input type="text" class="form-control" id="primaryColourHex" readonly />
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Input.SecondaryColour" class="form-label">Secondary Colour <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="color" asp-for="Input.SecondaryColour" class="form-control form-control-color" required />
+                            <input type="text" class="form-control" id="secondaryColourHex" readonly />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <label class="form-label">Logo Image</label>
+
+                        @if (!string.IsNullOrEmpty(Model.CurrentLogoUrl))
+                        {
+                            <div class="alert alert-info">
+                                <div class="d-flex align-items-center">
+                                    <div>
+                                        <strong>Current Logo:</strong><br />
+                                        <img src="@Model.CurrentLogoUrl" alt="Current Logo" class="img-thumbnail mt-2" style="max-height: 100px;" />
+                                    </div>
+                                    <div class="ms-auto">
+                                        <div class="form-check">
+                                            <input asp-for="ReplaceExistingLogo" class="form-check-input" type="checkbox" id="replaceLogo" />
+                                            <label class="form-check-label" for="replaceLogo">
+                                                Replace existing logo
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <div id="logoUploadSection">
+                            <input asp-for="Upload" class="form-control" accept=".jpg,.jpeg,.png,.gif,.webp"
+                                   data-max-size="5242880" />
+                            <span asp-validation-for="Upload" class="text-danger"></span>
+                            <small class="text-muted">Accepted formats: JPG, PNG, GIF, WebP (Max 5MB)</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- === SECTION 3: Page Content (About Us) === -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-file-text me-2"></i>About Us Page Content</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">Edit the content for the 'About Us' page sections.</p>
+
+                <div class="border rounded p-3 mb-3">
+                    <h6 class="text-primary">Section 1 (e.g., "Who We Are")</h6>
+                    <div class="mb-2">
+                        <label asp-for="Input.AboutSection1_Title" class="form-label">Title</label>
+                        <input asp-for="Input.AboutSection1_Title" class="form-control" maxlength="100" />
+                    </div>
+                    <div class="mb-2">
+                        <label asp-for="Input.AboutSection1_Content" class="form-label">Content</label>
+                        <textarea asp-for="Input.AboutSection1_Content" class="form-control" rows="3" maxlength="2000"></textarea>
+                    </div>
+                </div>
+
+                <div class="border rounded p-3 mb-3">
+                    <h6 class="text-primary">Section 2 (e.g., "What We Do")</h6>
+                    <div class="mb-2">
+                        <label asp-for="Input.AboutSection2_Title" class="form-label">Title</label>
+                        <input asp-for="Input.AboutSection2_Title" class="form-control" maxlength="100" />
+                    </div>
+                    <div class="mb-2">
+                        <label asp-for="Input.AboutSection2_Content" class="form-label">Content</label>
+                        <textarea asp-for="Input.AboutSection2_Content" class="form-control" rows="3" maxlength="2000"></textarea>
+                    </div>
+                </div>
+
+                <div class="border rounded p-3">
+                    <h6 class="text-primary">Section 3 (e.g., "How We Do It")</h6>
+                    <div class="mb-2">
+                        <label asp-for="Input.AboutSection3_Title" class="form-label">Title</label>
+                        <input asp-for="Input.AboutSection3_Title" class="form-control" maxlength="100" />
+                    </div>
+                    <div class="mb-2">
+                        <label asp-for="Input.AboutSection3_Content" class="form-label">Content</label>
+                        <textarea asp-for="Input.AboutSection3_Content" class="form-control" rows="3" maxlength="2000"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- === SECTION 4: Contact Page Settings === -->
+        <div class="card mb-4">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0"><i class="bi bi-telephone me-2"></i>Contact Page Settings</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Input.ContactFormRecipientEmail" class="form-label">Contact Form Recipient Email</label>
+                        <input type="email" asp-for="Input.ContactFormRecipientEmail" class="form-control" />
+                        <span asp-validation-for="Input.ContactFormRecipientEmail" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Input.ContactPagePhone" class="form-label">Phone Number to Display</label>
+                        <input asp-for="Input.ContactPagePhone" class="form-control" type="tel"
+                               pattern="^(\+(?:27|258)\d{9}|0[1-8]\d{8}|8[2-7]\d{7})$" />
+                        <span asp-validation-for="Input.ContactPagePhone" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Input.ContactPageLocation" class="form-label">Location Text to Display</label>
+                    <input asp-for="Input.ContactPageLocation" class="form-control" maxlength="200" />
+                    <span asp-validation-for="Input.ContactPageLocation" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Input.ContactFormHandler" class="form-label">Form Submission Action <span class="text-danger">*</span></label>
+                    <select asp-for="Input.ContactFormHandler" asp-items="Html.GetEnumSelectList<OneClick_WebApp.Models.Enums.ContactFormHandler>()"
+                            class="form-select" required>
+                    </select>
+                    <small class="form-text text-muted">Choose whether to save messages to the database or send them as an email.</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- === SECTION 5: Footer Content & Links === -->
+        <div class="card mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="bi bi-link-45deg me-2"></i>Footer Content & Links</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label asp-for="Input.FooterTagline" class="form-label">Footer Tagline</label>
+                    <textarea asp-for="Input.FooterTagline" class="form-control" rows="2" maxlength="300"></textarea>
+                    <span asp-validation-for="Input.FooterTagline" class="text-danger"></span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Input.SupportEmail" class="form-label">Support Email</label>
+                        <input type="email" asp-for="Input.SupportEmail" class="form-control" />
+                        <span asp-validation-for="Input.SupportEmail" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Input.SupportPhone" class="form-label">Support Phone</label>
+                        <input type="tel" asp-for="Input.SupportPhone" class="form-control"
+                               pattern="^(\+(?:27|258)\d{9}|0[1-8]\d{8}|8[2-7]\d{7})$" />
+                        <span asp-validation-for="Input.SupportPhone" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <h6 class="mt-3 mb-2">Social Media Links</h6>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Input.SocialMedia_Facebook" class="form-label">
+                            <i class="bi bi-facebook me-1"></i>Facebook URL
+                        </label>
+                        <input type="url" asp-for="Input.SocialMedia_Facebook" class="form-control"
+                               placeholder="https://facebook.com/yourpage" pattern="https?://.*" />
+                        <span asp-validation-for="Input.SocialMedia_Facebook" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Input.SocialMedia_Instagram" class="form-label">
+                            <i class="bi bi-instagram me-1"></i>Instagram URL
+                        </label>
+                        <input type="url" asp-for="Input.SocialMedia_Instagram" class="form-control"
+                               placeholder="https://instagram.com/yourpage" pattern="https?://.*" />
+                        <span asp-validation-for="Input.SocialMedia_Instagram" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Input.SocialMedia_Twitter" class="form-label">
+                            <i class="bi bi-twitter me-1"></i>Twitter (X) URL
+                        </label>
+                        <input type="url" asp-for="Input.SocialMedia_Twitter" class="form-control"
+                               placeholder="https://twitter.com/yourpage" pattern="https?://.*" />
+                        <span asp-validation-for="Input.SocialMedia_Twitter" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Input.SocialMedia_LinkedIn" class="form-label">
+                            <i class="bi bi-linkedin me-1"></i>LinkedIn URL
+                        </label>
+                        <input type="url" asp-for="Input.SocialMedia_LinkedIn" class="form-control"
+                               placeholder="https://linkedin.com/company/yourpage" pattern="https?://.*" />
+                        <span asp-validation-for="Input.SocialMedia_LinkedIn" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="bi bi-save me-2"></i>Save All Changes
+            </button>
+            <a href="/Admin/Dashboard" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Colour picker hex display
+            const primaryColor = document.getElementById('Input_PrimaryColour');
+            const primaryHex = document.getElementById('primaryColourHex');
+            const secondaryColor = document.getElementById('Input_SecondaryColour');
+            const secondaryHex = document.getElementById('secondaryColourHex');
+
+            if (primaryColor && primaryHex) {
+                primaryHex.value = primaryColor.value;
+                primaryColor.addEventListener('change', function() {
+                    primaryHex.value = this.value;
+                });
+            }
+
+            if (secondaryColor && secondaryHex) {
+                secondaryHex.value = secondaryColor.value;
+                secondaryColor.addEventListener('change', function() {
+                    secondaryHex.value = this.value;
+                });
+            }
+
+            // Logo replacement logic
+            const replaceLogo = document.getElementById('replaceLogo');
+            const uploadInput = document.getElementById('Upload');
+            const uploadSection = document.getElementById('logoUploadSection');
+
+            if (replaceLogo && uploadInput) {
+                if (!replaceLogo.checked && '@Model.CurrentLogoUrl' !== '') {
+                    uploadInput.removeAttribute('required');
+                    uploadSection.style.opacity = '0.5';
+                    uploadInput.disabled = true;
+                }
+
+                replaceLogo.addEventListener('change', function() {
+                    if (this.checked) {
+                        uploadInput.setAttribute('required', 'required');
+                        uploadSection.style.opacity = '1';
+                        uploadInput.disabled = false;
+                    } else {
+                        uploadInput.removeAttribute('required');
+                        uploadSection.style.opacity = '0.5';
+                        uploadInput.disabled = true;
+                        uploadInput.value = '';
+                    }
+                });
+            }
+
+            // Form validation enhancement
+            const forms = document.querySelectorAll('.needs-validation');
+            Array.from(forms).forEach(form => {
+                form.addEventListener('submit', event => {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+
+            // Phone number formatting helper
+            const phoneInputs = document.querySelectorAll('input[type="tel"]');
+            phoneInputs.forEach(input => {
+                input.addEventListener('blur', function() {
+                    let value = this.value.replace(/\s+/g, '');
+                    if (value.startsWith('0') && value.length === 10) {
+                        this.value = value.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3');
+                    }
+                });
+            });
+        });
+    </script>
+}

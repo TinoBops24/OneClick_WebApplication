@@ -1,0 +1,303 @@
+﻿@page
+@model OneClick_WebApp.Pages.Admin.DataMigrationModel
+@attribute [Authorize(Policy = "AdminOnly")]
+@{
+    ViewData["Title"] = "Data Migration";
+    ViewData["Subtitle"] = "Database maintenance and migration tools";
+    Layout = "_AdminLayout";
+}
+
+<!-- Status Messages -->
+@if (!string.IsNullOrEmpty(Model.StatusMessage))
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        @Model.StatusMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        @Model.ErrorMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<!-- Migration Overview -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Order ClientId Migration Tool
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-3">
+                    This tool fixes the customer ID inconsistency in existing orders. Previously, orders stored Firebase UIDs as customer IDs,
+                    but they should store user email addresses for consistency with the User Management interface.
+                </p>
+
+                <div class="alert alert-info">
+                    <strong>What this migration does:</strong>
+                    <ul class="mb-0">
+                        <li>Converts Firebase UID format (e.g., <code>fOdsmJGK4vdInYwV9sMYAcIYenA3</code>) to email format (e.g., <code>customer@email.com</code>)</li>
+                        <li>Updates existing orders in the transactions collection</li>
+                        <li>Makes customer identification consistent across admin interfaces</li>
+                        <li>Fixes dashboard customer segmentation accuracy</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Current Status Analysis -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <i class="bi bi-bar-chart me-2"></i>
+                    Current Database Status
+                </h6>
+                <form method="post" class="d-inline">
+                    <button type="submit" asp-page-handler="AnalyzeOrders" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Refresh Analysis
+                    </button>
+                </form>
+            </div>
+            <div class="card-body">
+                @if (Model.Status.Success)
+                {
+                    <div class="row text-center">
+                        <div class="col-md-3 mb-3">
+                            <div class="bg-primary text-white rounded p-3">
+                                <div class="h4 mb-0">@Model.Status.TotalOrders</div>
+                                <small>Total Orders</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="bg-warning text-dark rounded p-3">
+                                <div class="h4 mb-0">@Model.Status.OrdersNeedingMigration</div>
+                                <small>Need Migration</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="bg-success text-white rounded p-3">
+                                <div class="h4 mb-0">@Model.Status.OrdersAlreadyUsingEmail</div>
+                                <small>Already Correct</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="bg-secondary text-white rounded p-3">
+                                <div class="h4 mb-0">@Model.Status.OrdersWithoutClientId</div>
+                                <small>No Customer ID</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (Model.Status.OrdersNeedingMigration > 0)
+                    {
+                        <div class="alert alert-warning">
+                            <strong>Migration Required:</strong> @Model.Status.OrdersNeedingMigration orders still use Firebase UID format and need to be migrated to email format.
+                        </div>
+                    }
+                    else if (Model.Status.TotalOrders > 0)
+                    {
+                        <div class="alert alert-success">
+                            <strong>All Good:</strong> All orders are already using the correct email format. No migration needed.
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="alert alert-danger">
+                        <strong>Analysis Error:</strong> @Model.Status.ErrorMessage
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-shield-exclamation me-2"></i>
+                    Safety Information
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <i class="bi bi-check-circle text-success me-2"></i>
+                    <small>Safe to run multiple times</small>
+                </div>
+                <div class="d-flex align-items-center mb-3">
+                    <i class="bi bi-check-circle text-success me-2"></i>
+                    <small>Skips already migrated orders</small>
+                </div>
+                <div class="d-flex align-items-center mb-3">
+                    <i class="bi bi-check-circle text-success me-2"></i>
+                    <small>Comprehensive error handling</small>
+                </div>
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-info-circle text-primary me-2"></i>
+                    <small>Creates detailed migration log</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sample Data Preview -->
+@if (Model.Status.Success && (Model.Status.SampleFirebaseUids.Any() || Model.Status.SampleEmails.Any()))
+{
+    <div class="row mb-4">
+        @if (Model.Status.SampleFirebaseUids.Any())
+        {
+            <div class="col-lg-6">
+                <div class="card border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <h6 class="mb-0">Sample Orders Needing Migration</h6>
+                    </div>
+                    <div class="card-body">
+                        @foreach (var sample in Model.Status.SampleFirebaseUids)
+                        {
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                                <code class="small">@sample</code>
+                            </div>
+                        }
+                        @if (Model.Status.OrdersNeedingMigration > Model.Status.SampleFirebaseUids.Count)
+                        {
+                            <small class="text-muted">... and @(Model.Status.OrdersNeedingMigration - Model.Status.SampleFirebaseUids.Count) more</small>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (Model.Status.SampleEmails.Any())
+        {
+            <div class="col-lg-6">
+                <div class="card border-success">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0">Sample Orders Already Correct</h6>
+                    </div>
+                    <div class="card-body">
+                        @foreach (var sample in Model.Status.SampleEmails)
+                        {
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-check-circle text-success me-2"></i>
+                                <code class="small">@sample</code>
+                            </div>
+                        }
+                        @if (Model.Status.OrdersAlreadyUsingEmail > Model.Status.SampleEmails.Count)
+                        {
+                            <small class="text-muted">... and @(Model.Status.OrdersAlreadyUsingEmail - Model.Status.SampleEmails.Count) more</small>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<!-- Migration Action -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-play-circle me-2"></i>
+                    Run Migration
+                </h6>
+            </div>
+            <div class="card-body">
+                @if (Model.Status.OrdersNeedingMigration > 0)
+                {
+                    <div class="alert alert-warning">
+                        <strong>Ready to migrate @Model.Status.OrdersNeedingMigration orders</strong><br>
+                        This will update the ClientId field from Firebase UID format to email format for better consistency across admin interfaces.
+                    </div>
+
+                    <form method="post" onsubmit="return confirmMigration()" class="d-inline">
+                        <button type="submit" asp-page-handler="MigrateOrderClientIds" class="btn btn-danger">
+                            <i class="bi bi-database me-2"></i>
+                            Run ClientId Migration (@Model.Status.OrdersNeedingMigration orders)
+                        </button>
+                    </form>
+                }
+                else if (Model.Status.TotalOrders > 0)
+                {
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle me-2"></i>
+                        <strong>No migration needed!</strong> All @Model.Status.TotalOrders orders are already using the correct email format.
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        No orders found in the database. Migration not applicable.
+                    </div>
+                }
+
+                <div class="mt-3">
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle me-1"></i>
+                        After successful migration, you can safely delete this page from your project.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Navigation Links -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="d-flex gap-2">
+            <a href="/Admin/Dashboard" class="btn btn-outline-primary">
+                <i class="bi bi-speedometer2 me-1"></i>Return to Dashboard
+            </a>
+            <a href="/Admin/Orders" class="btn btn-outline-secondary">
+                <i class="bi bi-list-ul me-1"></i>View Orders
+            </a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function confirmMigration() {
+            const ordersCount = @Model.Status.OrdersNeedingMigration;
+
+            const message = `⚠️ DATABASE MIGRATION CONFIRMATION\n\n` +
+                `You are about to migrate ${ordersCount} orders from Firebase UID format to email format.\n\n` +
+                `This will:\n` +
+                `• Update the ClientId field in ${ordersCount} order records\n` +
+                `• Make customer identification consistent across admin pages\n` +
+                `• Fix dashboard customer segmentation\n\n` +
+                `The migration is safe and can be run multiple times.\n\n` +
+                `Are you sure you want to proceed?`;
+
+            return confirm(message);
+        }
+
+        // Auto-refresh status every 30 seconds if migration is needed
+        @if (Model.Status.OrdersNeedingMigration > 0)
+        {
+            <text>
+                document.addEventListener('DOMContentLoaded', function() {
+                    console.log('Data migration page loaded. Orders needing migration: @Model.Status.OrdersNeedingMigration');
+                });
+            </text>
+        }
+    </script>
+}

@@ -1,0 +1,801 @@
+﻿@page
+@model OneClick_WebApp.Pages.Account.OrderHistoryModel
+@{
+    ViewData["Title"] = "Order History";
+}
+
+<style>
+    :root {
+        --pharmacy-primary: #1e40af;
+        --pharmacy-secondary: #3b82f6;
+        --pharmacy-accent: #059669;
+        --pharmacy-light: #f8fafc;
+        --pharmacy-muted: #6b7280;
+        --pharmacy-border: #e5e7eb;
+        --pharmacy-dark: #1e3a8a;
+        --pharmacy-success: #10b981;
+        --pharmacy-warning: #f59e0b;
+        --pharmacy-danger: #ef4444;
+    }
+
+    .order-history-wrapper {
+        background: var(--pharmacy-light);
+        min-height: calc(100vh - 140px);
+        padding: 2rem 0;
+    }
+
+    .page-header {
+        background: white;
+        border-bottom: 1px solid var(--pharmacy-border);
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 600;
+        color: var(--pharmacy-primary);
+        margin: 0;
+    }
+
+    .continue-shopping-btn {
+        background: var(--pharmacy-primary);
+        border: none;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 6px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+
+        .continue-shopping-btn:hover {
+            background: var(--pharmacy-dark);
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
+        }
+
+    .orders-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .summary-card {
+        background: white;
+        border-radius: 6px;
+        padding: 1rem;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+        border: 1px solid var(--pharmacy-border);
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--pharmacy-primary);
+        }
+
+        .summary-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+    .summary-card-content {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .summary-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+        background: #f8fafc;
+        color: var(--pharmacy-primary);
+        border: 1px solid var(--pharmacy-border);
+    }
+
+        .summary-icon.total {
+            background: #f8fafc;
+            color: var(--pharmacy-primary);
+        }
+
+        .summary-icon.recent {
+            background: #f8fafc;
+            color: var(--pharmacy-primary);
+        }
+
+        .summary-icon.amount {
+            background: #f8fafc;
+            color: var(--pharmacy-accent);
+        }
+
+    .summary-details h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0 0 0.125rem 0;
+    }
+
+    .summary-details p {
+        color: var(--pharmacy-muted);
+        font-size: 0.75rem;
+        font-weight: 500;
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .empty-state {
+        background: white;
+        border-radius: 20px;
+        padding: 4rem 2rem;
+        text-align: center;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        border: 1px solid var(--pharmacy-border);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .empty-state-icon {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+        font-size: 3rem;
+        color: var(--pharmacy-muted);
+    }
+
+    .empty-state h4 {
+        font-size: 1.75rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state p {
+        color: var(--pharmacy-muted);
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+        line-height: 1.6;
+    }
+
+    .start-shopping-btn {
+        background: linear-gradient(135deg, var(--pharmacy-primary), var(--pharmacy-secondary));
+        border: none;
+        color: white;
+        padding: 1rem 2.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+        .start-shopping-btn:hover {
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(30, 64, 175, 0.3);
+        }
+
+    .order-card {
+        background: white;
+        border-radius: 16px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        border: 1px solid var(--pharmacy-border);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+        .order-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+        }
+
+    .order-header {
+        background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid var(--pharmacy-border);
+    }
+
+    .order-id {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--pharmacy-primary);
+        margin: 0 0 0.5rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+        .order-id i {
+            background: var(--pharmacy-primary);
+            color: white;
+            padding: 0.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+    .order-date {
+        color: var(--pharmacy-muted);
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+
+    .order-meta {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        align-items: center;
+        margin-top: 1rem;
+    }
+
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+        .status-badge.status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-badge.status-new {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-badge.status-accepted {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-badge.status-processing {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-badge.status-readyforcollection {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-badge.status-completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-badge.status-declined {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-badge.status-cancelled {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+    .delivery-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--pharmacy-muted);
+        font-weight: 500;
+    }
+
+        .delivery-info i {
+            color: var(--pharmacy-secondary);
+        }
+
+    .order-total {
+        text-align: right;
+    }
+
+        .order-total .amount {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--pharmacy-accent);
+            margin: 0;
+        }
+
+    .view-details-btn {
+        background: var(--pharmacy-primary);
+        border: none;
+        color: white;
+        padding: 0.5rem 1.25rem;
+        border-radius: 25px;
+        font-weight: 500;
+        font-size: 0.875rem;
+        transition: all 0.3s ease;
+        margin-top: 0.75rem;
+    }
+
+        .view-details-btn:hover {
+            background: var(--pharmacy-dark);
+            transform: translateY(-1px);
+        }
+
+    .order-details {
+        padding: 2rem;
+    }
+
+    .details-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+
+    .details-section h6 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--pharmacy-primary);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .details-table {
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+
+        .details-table table {
+            margin: 0;
+        }
+
+        .details-table td {
+            padding: 0.5rem 0;
+            border: none;
+            vertical-align: top;
+        }
+
+            .details-table td:first-child {
+                color: var(--pharmacy-muted);
+                font-weight: 500;
+                width: 30%;
+            }
+
+    .item-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+        .item-row:last-child {
+            border-bottom: none;
+        }
+
+    .item-image {
+        width: 50px;
+        height: 50px;
+        border-radius: 8px;
+        object-fit: cover;
+        border: 1px solid var(--pharmacy-border);
+    }
+
+    .item-details {
+        flex: 1;
+    }
+
+    .item-name {
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0 0 0.25rem 0;
+        font-size: 0.95rem;
+    }
+
+    .item-meta {
+        color: var(--pharmacy-muted);
+        font-size: 0.875rem;
+    }
+
+    .item-total {
+        font-weight: 700;
+        color: var(--pharmacy-accent);
+        font-size: 1rem;
+    }
+
+    .order-actions {
+        border-top: 1px solid var(--pharmacy-border);
+        padding-top: 1.5rem;
+        margin-top: 1.5rem;
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+    }
+
+    .action-btn {
+        padding: 0.5rem 1.25rem;
+        border-radius: 25px;
+        font-weight: 500;
+        font-size: 0.875rem;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+        .action-btn.primary {
+            background: var(--pharmacy-primary);
+            color: white;
+            border: 1px solid var(--pharmacy-primary);
+        }
+
+            .action-btn.primary:hover {
+                background: var(--pharmacy-dark);
+                color: white;
+                transform: translateY(-1px);
+            }
+
+        .action-btn.secondary {
+            background: white;
+            color: var(--pharmacy-muted);
+            border: 1px solid var(--pharmacy-border);
+        }
+
+            .action-btn.secondary:hover {
+                background: #f8fafc;
+                color: var(--pharmacy-primary);
+                border-color: var(--pharmacy-primary);
+            }
+
+        .action-btn.success {
+            background: var(--pharmacy-accent);
+            color: white;
+            border: 1px solid var(--pharmacy-accent);
+            cursor: default;
+        }
+
+            .action-btn.success:disabled {
+                opacity: 0.7;
+            }
+
+    @@media (max-width: 768px) {
+        .page-title
+
+    {
+        font-size: 2rem;
+    }
+
+    .page-title i {
+        font-size: 1.5rem;
+        padding: 0.75rem;
+    }
+
+    .orders-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .summary-card {
+        padding: 1.5rem;
+    }
+
+    .summary-card-content {
+        gap: 1rem;
+    }
+
+    .summary-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.25rem;
+    }
+
+    .summary-details h3 {
+        font-size: 1.75rem;
+    }
+
+    .details-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .order-meta {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .order-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .action-btn {
+        justify-content: center;
+    }
+
+    }
+</style>
+
+<div class="order-history-wrapper">
+    <!-- Professional Header Section -->
+    <div class="page-header">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="page-title">Order History</h1>
+                <a href="/Products/Index" class="continue-shopping-btn">
+                    <i class="bi bi-bag-plus me-2"></i>
+                    Continue Shopping
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        @if (Model.Orders == null || !Model.Orders.Any())
+        {
+            <!-- Enhanced Empty State -->
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="bi bi-cart-x"></i>
+                </div>
+                <h4>No Orders Yet</h4>
+                <p>You haven't placed any orders yet. Start shopping to see your order history here. We have a wide range of pharmacy products available for delivery.</p>
+                <a href="/Products/Index" class="start-shopping-btn">
+                    <i class="bi bi-bag-plus"></i>
+                    Start Shopping
+                </a>
+            </div>
+        }
+        else
+        {
+            <!-- Order Summary Cards -->
+            <div class="orders-summary">
+                <div class="summary-card">
+                    <div class="summary-card-content">
+                        <div class="summary-icon total">
+                            📦
+                        </div>
+                        <div class="summary-details">
+                            <h3>@Model.Orders.Count</h3>
+                            <p>Total Orders</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-card-content">
+                        <div class="summary-icon recent">
+                            📤
+                        </div>
+                        <div class="summary-details">
+                            <h3>@Model.Orders.Count(o => o.Transaction.Timestamp.HasValue && o.Transaction.Timestamp.Value.ToDateTime() > DateTime.Now.AddDays(-30))</h3>
+                            <p>Recent Orders</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-card-content">
+                        <div class="summary-icon amount">
+                            💰
+                        </div>
+                        <div class="summary-details">
+                            <h3>@Model.Orders.Sum(o => o.Transaction.GrandTotal).ToString("C", new System.Globalization.CultureInfo("en-ZA"))</h3>
+                            <p>Total Spent</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enhanced Order Cards -->
+            @foreach (var order in Model.Orders)
+            {
+                @if (order.Transaction != null)
+                {
+                    <div class="order-card">
+                        <div class="order-header">
+                            <h3 class="order-id">
+                                <i class="bi bi-receipt"></i>
+                                Order #@(order.Transaction.TransactionId ?? order.Transaction.Id ?? "Unknown")
+                            </h3>
+                            <div class="order-date">
+                                @(order.Transaction.Timestamp.HasValue ? order.Transaction.Timestamp.Value.ToDateTime().ToLocalTime().ToString("dd MMMM yyyy, HH:mm") : "Date not available")
+                            </div>
+
+                            <div class="order-meta">
+                                <div>
+                                    <span class="status-badge status-@(order.Transaction.OrderStatus.ToString().ToLower())">
+                                        <i class="bi bi-circle-fill"></i>
+                                        @order.Transaction.OrderStatus.ToString()
+                                    </span>
+                                    @if (order.Transaction.FulfillmentStatus != OneClick_WebApp.Models.Enums.FulfillmentStatus.Pending &&
+                                   order.Transaction.FulfillmentStatus.ToString() != order.Transaction.OrderStatus.ToString())
+                                    {
+                                        <br />
+                                        <small class="text-muted mt-1 d-inline-block">@order.FulfillmentStatus</small>
+                                    }
+                                </div>
+                                <div class="delivery-info">
+                                    <i class="bi bi-truck"></i>
+                                    @order.DeliveryType
+                                </div>
+                                <div class="order-total">
+                                    <h4 class="amount">@order.Transaction.GrandTotal.ToString("C", new System.Globalization.CultureInfo("en-ZA"))</h4>
+                                    <button class="view-details-btn" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#order-@order.Transaction.Id"
+                                            aria-expanded="false">
+                                        <i class="bi bi-chevron-down"></i>
+                                        View Details
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="collapse" id="order-@order.Transaction.Id">
+                            <div class="order-details">
+                                <div class="details-grid">
+                                    <!-- Customer Details -->
+                                    <div class="details-section">
+                                        <h6><i class="bi bi-person"></i>Delivery Information</h6>
+                                        <div class="details-table">
+                                            <table class="table table-borderless mb-0">
+                                                <tr>
+                                                    <td>Name:</td>
+                                                    <td><strong>@order.Transaction.ClientName</strong></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Phone:</td>
+                                                    <td>
+                                                        @if (!string.IsNullOrEmpty(order.Phone) && order.Phone != "TBC")
+                                                        {
+                                                            <a href="tel:@order.Phone" class="text-decoration-none">
+                                                                <strong>@order.Phone</strong>
+                                                            </a>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-muted">Not provided</span>
+                                                        }
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Address:</td>
+                                                    <td>
+                                                        @if (!string.IsNullOrEmpty(order.Address) && order.Address != "TBC")
+                                                        {
+                                                            <strong>@order.Address</strong>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-muted">Not provided</span>
+                                                        }
+                                                    </td>
+                                                </tr>
+                                                @if (!string.IsNullOrEmpty(order.Transaction.Instructions))
+                                                {
+                                                    <tr>
+                                                        <td>Instructions:</td>
+                                                        <td><strong>@order.Transaction.Instructions</strong></td>
+                                                    </tr>
+                                                }
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    <!-- Order Items -->
+                                    <div class="details-section">
+                                        <h6><i class="bi bi-bag"></i>Order Items</h6>
+                                        @if (order.Transaction.StockMovements != null && order.Transaction.StockMovements.Any())
+                                        {
+                                            <div class="details-table">
+                                                @foreach (var item in order.Transaction.StockMovements)
+                                                {
+                                                    <div class="item-row">
+                                                        @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                                        {
+                                                            <img src="@item.ImageUrl" alt="@item.ProductName" class="item-image">
+                                                        }
+                                                        else
+                                                        {
+                                                            <div class="item-image" style="background: #f3f4f6; display: flex; align-items: center; justify-content: center;">
+                                                                <i class="bi bi-image text-muted"></i>
+                                                            </div>
+                                                        }
+                                                        <div class="item-details">
+                                                            <h6 class="item-name">@(item.ProductName ?? "Unknown Item")</h6>
+                                                            <div class="item-meta">@item.Quantity × @item.UnitPrice.ToString("C", new System.Globalization.CultureInfo("en-ZA"))</div>
+                                                        </div>
+                                                        <div class="item-total">
+                                                            @item.LineTotal.ToString("C", new System.Globalization.CultureInfo("en-ZA"))
+                                                        </div>
+                                                    </div>
+                                                }
+                                                <div class="item-row" style="border-top: 2px solid var(--pharmacy-border); margin-top: 1rem; padding-top: 1rem;">
+                                                    <div class="item-details">
+                                                        <h6 class="item-name">Total</h6>
+                                                    </div>
+                                                    <div class="item-total" style="font-size: 1.25rem; font-weight: 700;">
+                                                        @order.Transaction.GrandTotal.ToString("C", new System.Globalization.CultureInfo("en-ZA"))
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="details-table">
+                                                <p class="text-muted mb-0">No items found</p>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="order-actions">
+                                    @if (!string.IsNullOrEmpty(order.Phone) && order.Phone != "TBC")
+                                    {
+                                        <a href="tel:@order.Phone" class="action-btn primary">
+                                            <i class="bi bi-telephone"></i>
+                                            Call Support
+                                        </a>
+                                    }
+                                    <a href="/Contact" class="action-btn secondary">
+                                        <i class="bi bi-envelope"></i>
+                                        Contact Us
+                                    </a>
+                                    @if (order.Transaction.OrderStatus == OneClick_WebApp.Models.Enums.OnlineOrderStatus.Completed)
+                                    {
+                                        <span class="action-btn success">
+                                            <i class="bi bi-check-circle"></i>
+                                            Order Complete
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        }
+    </div>
+</div>
+
+@functions {
+    private string GetStatusBadgeClass(OneClick_WebApp.Models.Enums.OnlineOrderStatus status)
+    {
+        return status switch
+        {
+            OneClick_WebApp.Models.Enums.OnlineOrderStatus.Pending => "warning",
+            OneClick_WebApp.Models.Enums.OnlineOrderStatus.New => "info",
+            OneClick_WebApp.Models.Enums.OnlineOrderStatus.Accepted => "primary",
+            OneClick_WebApp.Models.Enums.OnlineOrderStatus.Processing => "info",
+            OneClick_WebApp.Models.Enums.OnlineOrderStatus.ReadyForCollection => "success",
+            OneClick_WebApp.Models.Enums.OnlineOrderStatus.Completed => "success",
+            OneClick_WebApp.Models.Enums.OnlineOrderStatus.Declined => "danger",
+            OneClick_WebApp.Models.Enums.OnlineOrderStatus.Cancelled => "secondary",
+            _ => "secondary"
+        };
+    }
+}

@@ -1,0 +1,1000 @@
+﻿@page
+@model OneClick_WebApp.Pages.Admin.Reports.TopProductsModel
+@attribute [Authorize(Policy = "AdminOnly")]
+@{
+    ViewData["Title"] = "Top Products Report";
+    ViewData["Subtitle"] = "Best-selling products and revenue drivers analysis";
+    Layout = "_AdminLayout";
+}
+
+<!-- Report Header with Filters -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h5 class="mb-1">
+                            <i class="bi bi-trophy me-2 text-primary"></i>
+                            Top Products Analysis
+                        </h5>
+                        <small class="text-muted">Identify best-sellers and revenue drivers for inventory optimisation</small>
+                    </div>
+                    <div>
+                        <button class="btn btn-outline-primary btn-sm" onclick="window.print()">
+                            <i class="bi bi-printer me-1"></i>Print Report
+                        </button>
+                        @* <button class="btn btn-outline-success btn-sm" onclick="exportToCSV()">
+                            <i class="bi bi-download me-1"></i>Export CSV
+                        </button> *@
+                    </div>
+                </div>
+
+                <!-- Filter Form -->
+                <form method="get" class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label for="startDate" class="form-label">Start Date</label>
+                        <input type="date" 
+                               class="form-control" 
+                               id="startDate" 
+                               name="StartDate" 
+                               value="@Model.StartDate?.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-md-3">
+                        <label for="endDate" class="form-label">End Date</label>
+                        <input type="date" 
+                               class="form-control" 
+                               id="endDate" 
+                               name="EndDate" 
+                               value="@Model.EndDate?.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-md-2">
+                        <label for="categoryFilter" class="form-label">Category</label>
+                        <select class="form-select" id="categoryFilter" name="CategoryFilter">
+                            <option value="">All Categories</option>
+                            @foreach (var category in Model.AvailableCategories)
+                            {
+                                <option value="@category" selected="@(Model.CategoryFilter == category)">@category</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="topCount" class="form-label">Show Top</label>
+                        <select class="form-select" id="topCount" name="TopCount">
+                            <option value="5" selected="@(Model.TopCount == 5)">Top 5</option>
+                            <option value="10" selected="@(Model.TopCount == 10)">Top 10</option>
+                            <option value="20" selected="@(Model.TopCount == 20)">Top 20</option>
+                            <option value="50" selected="@(Model.TopCount == 50)">Top 50</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-funnel me-1"></i>Apply
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Quick Filters -->
+                <div class="mt-3">
+                    <small class="text-muted me-2">Quick filters:</small>
+                    <a href="?StartDate=@DateTime.Today.AddDays(-7).ToString("yyyy-MM-dd")&EndDate=@DateTime.Today.ToString("yyyy-MM-dd")&TopCount=@Model.TopCount" 
+                       class="btn btn-sm btn-outline-secondary me-1">Last 7 Days</a>
+                    <a href="?StartDate=@DateTime.Today.AddDays(-30).ToString("yyyy-MM-dd")&EndDate=@DateTime.Today.ToString("yyyy-MM-dd")&TopCount=@Model.TopCount" 
+                       class="btn btn-sm btn-outline-secondary me-1">Last 30 Days</a>
+                    <a href="?StartDate=@DateTime.Today.AddDays(-90).ToString("yyyy-MM-dd")&EndDate=@DateTime.Today.ToString("yyyy-MM-dd")&TopCount=@Model.TopCount" 
+                       class="btn btn-sm btn-outline-secondary">Last 90 Days</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card border-left-success h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Total Revenue
+                        </div>
+                        <div class="h4 mb-0 font-weight-bold text-gray-800">
+                            R <span class="counter" data-target="@((int)Model.TotalRevenue)">0</span>
+                        </div>
+                        <small class="text-muted">From @Model.TotalProductsSold transactions</small>
+                    </div>
+                    <div class="col-auto">
+                        <div class="stats-icon bg-success">
+                            <i class="bi bi-currency-dollar"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card border-left-primary h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Units Sold
+                        </div>
+                        <div class="h4 mb-0 font-weight-bold text-gray-800 counter" data-target="@Model.TotalUnitsSold">0</div>
+                        <small class="text-muted">Total product units</small>
+                    </div>
+                    <div class="col-auto">
+                        <div class="stats-icon bg-primary">
+                            <i class="bi bi-box-seam"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card border-left-info h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Unique Products
+                        </div>
+                        <div class="h4 mb-0 font-weight-bold text-gray-800 counter" data-target="@Model.UniqueProductsOrdered">0</div>
+                        <small class="text-muted">Different items sold</small>
+                    </div>
+                    <div class="col-auto">
+                        <div class="stats-icon bg-info">
+                            <i class="bi bi-grid-3x3-gap"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card border-left-warning h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Total Transactions
+                        </div>
+                        <div class="h4 mb-0 font-weight-bold text-gray-800 counter" data-target="@Model.TotalProductsSold">0</div>
+                        <small class="text-muted">Product line items</small>
+                    </div>
+                    <div class="col-auto">
+                        <div class="stats-icon bg-warning">
+                            <i class="bi bi-receipt-cutoff"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Top Products by Revenue and Quantity -->
+<div class="row mb-4">
+    <!-- Top Products by Revenue -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <i class="bi bi-trophy-fill me-2"></i>
+                    Top @Model.TopCount Products by Revenue
+                </h6>
+                <span class="badge bg-light text-success">Revenue Drivers</span>
+            </div>
+            <div class="card-body p-0">
+                @if (Model.TopProductsByRevenue.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 50px;">#</th>
+                                    <th>Product</th>
+                                    <th class="text-end" style="width: 100px;">Units</th>
+                                    <th class="text-end" style="width: 130px;">Revenue</th>
+                                    <th class="text-end" style="width: 110px;">Avg Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < Model.TopProductsByRevenue.Count; i++)
+                                {
+                                    var product = Model.TopProductsByRevenue[i];
+                                    var rankClass = i < 3 ? $"rank-{i + 1}" : "";
+                                    <tr class="@rankClass">
+                                        <td class="text-center fw-bold">
+                                            @if (i == 0)
+                                            {
+                                                <i class="bi bi-trophy-fill text-warning fs-5"></i>
+                                            }
+                                            else if (i == 1)
+                                            {
+                                                <i class="bi bi-trophy-fill text-secondary fs-5"></i>
+                                            }
+                                            else if (i == 2)
+                                            {
+                                                <i class="bi bi-trophy-fill text-bronze fs-5" style="color: #cd7f32;"></i>
+                                            }
+                                            else
+                                            {
+                                                <span>@(i + 1)</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold">@product.ProductName</div>
+                                            <small class="text-muted">@product.Category</small>
+                                        </td>
+                                        <td class="text-end fw-bold text-success">
+                                            R @product.TotalRevenue.ToString("N2")
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="badge bg-primary">@product.TotalQuantitySold</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <small class="text-muted">@product.RevenuePercentage.ToString("F1")%</small>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-2">No product data available</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Products by Quantity -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <i class="bi bi-box-seam-fill me-2"></i>
+                    Top @Model.TopCount Products by Quantity
+                </h6>
+                <span class="badge bg-light text-primary">Volume Leaders</span>
+            </div>
+            <div class="card-body p-0">
+                @if (Model.TopProductsByQuantity.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 50px;">#</th>
+                                    <th>Product</th>
+                                    <th class="text-end">Units</th>
+                                    <th class="text-end">Revenue</th>
+                                    <th class="text-end">Avg Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < Model.TopProductsByQuantity.Count; i++)
+                                {
+                                    var product = Model.TopProductsByQuantity[i];
+                                    var rankClass = i < 3 ? $"rank-{i + 1}" : "";
+                                    <tr class="@rankClass">
+                                        <td class="text-center fw-bold">
+                                            @if (i == 0)
+                                            {
+                                                <i class="bi bi-trophy-fill text-warning fs-5"></i>
+                                            }
+                                            else if (i == 1)
+                                            {
+                                                <i class="bi bi-trophy-fill text-secondary fs-5"></i>
+                                            }
+                                            else if (i == 2)
+                                            {
+                                                <i class="bi bi-trophy-fill text-bronze fs-5" style="color: #cd7f32;"></i>
+                                            }
+                                            else
+                                            {
+                                                <span>@(i + 1)</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold">@product.ProductName</div>
+                                            <small class="text-muted">@product.Category</small>
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="badge bg-primary">@product.TotalQuantitySold</span>
+                                        </td>
+                                        <td class="text-end fw-bold text-success">
+                                            R @product.TotalRevenue.ToString("N2")
+                                        </td>
+                                        <td class="text-end">
+                                            <small class="text-muted">R @product.AveragePrice.ToString("N2")}</small>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-2">No product data available</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Category Breakdown and Charts -->
+<div class="row mb-4">
+    <!-- Category Performance Chart -->
+    @if (Model.CategoryBreakdown.Any())
+    {
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-pie-chart me-2"></i>
+                        Revenue by Category
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div style="position: relative; height: 300px;">
+                        <canvas id="categoryRevenueChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-bar-chart me-2"></i>
+                        Top Categories Performance
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div style="position: relative; height: 300px;">
+                        <canvas id="categoryBarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Category Breakdown Table -->
+@if (Model.CategoryBreakdown.Any())
+{
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-grid-3x3-gap me-2"></i>
+                        Category Performance Breakdown
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="categoryTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Category</th>
+                                    <th class="text-end">Revenue</th>
+                                    <th class="text-end">Units Sold</th>
+                                    <th class="text-end">Unique Products</th>
+                                    <th class="text-end">Avg Order Value</th>
+                                    <th class="text-end">Revenue Share</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var category in Model.CategoryBreakdown)
+                                {
+                                    <tr>
+                                        <td class="fw-bold">@category.CategoryName</td>
+                                        <td class="text-end text-success fw-bold">R @category.TotalRevenue.ToString("N2")</td>
+                                        <td class="text-end">
+                                            <span class="badge bg-primary">@category.TotalQuantitySold</span>
+                                        </td>
+                                        <td class="text-end">@category.UniqueProducts</td>
+                                        <td class="text-end">R @category.AverageOrderValue.ToString("N2")</td>
+                                        <td class="text-end">
+                                            <div class="d-flex align-items-center justify-content-end">
+                                                <span class="me-2">@category.RevenuePercentage.ToString("F1")%</span>
+                                                <div class="progress" style="width: 100px; height: 8px;">
+                                                    <div class="progress-bar bg-success" 
+                                                         role="progressbar" 
+                                                         style="width: @category.RevenuePercentage.ToString("F1")%" 
+                                                         aria-valuenow="@category.RevenuePercentage" 
+                                                         aria-valuemin="0" 
+                                                         aria-valuemax="100">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Low Performers Section -->
+@if (Model.LowPerformers.Any())
+{
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Low Performing Products
+                        <small class="ms-2">(Less than 5 units sold or R500 revenue)</small>
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Category</th>
+                                    <th class="text-end">Units Sold</th>
+                                    <th class="text-end">Revenue</th>
+                                    <th class="text-end">Orders</th>
+                                    <th>Action Needed</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var product in Model.LowPerformers)
+                                {
+                                    <tr>
+                                        <td>@product.ProductName</td>
+                                        <td><span class="badge bg-secondary">@product.Category</span></td>
+                                        <td class="text-end">@product.TotalQuantitySold</td>
+                                        <td class="text-end">R @product.TotalRevenue.ToString("N2")</td>
+                                        <td class="text-end">@product.OrderCount</td>
+                                        <td>
+                                            @if (product.TotalQuantitySold < 3)
+                                            {
+                                                <span class="badge bg-danger">Consider Removing</span>
+                                            }
+                                            else if (product.TotalQuantitySold < 5)
+                                            {
+                                                <span class="badge bg-warning text-dark">Review Pricing</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-info">Increase Marketing</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- No Data State -->
+@if (!Model.TopProductsByRevenue.Any() && !Model.TopProductsByQuantity.Any())
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
+                    <h5 class="mt-3 text-muted">No Product Data Found</h5>
+                    <p class="text-muted">
+                        No products were sold during the selected period. 
+                        Try adjusting your date range or category filter.
+                    </p>
+                    <a href="?StartDate=@DateTime.Today.AddDays(-30).ToString("yyyy-MM-dd")&EndDate=@DateTime.Today.ToString("yyyy-MM-dd")" 
+                       class="btn btn-primary">
+                        <i class="bi bi-arrow-clockwise me-1"></i>View Last 30 Days
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        // Serialize data
+        const categoryData = @Html.Raw(Json.Serialize(Model.CategoryBreakdown));
+        const topByRevenue = @Html.Raw(Json.Serialize(Model.TopProductsByRevenue));
+        const topByQuantity = @Html.Raw(Json.Serialize(Model.TopProductsByQuantity));
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initCategoryRevenueChart();
+            initCategoryBarChart();
+            animateCounters();
+        });
+
+        // Category Revenue Pie Chart
+        function initCategoryRevenueChart() {
+            const ctx = document.getElementById('categoryRevenueChart');
+            if (!ctx || !categoryData.length) return;
+
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: categoryData.map(c => c.categoryName),
+                    datasets: [{
+                        data: categoryData.map(c => c.totalRevenue),
+                        backgroundColor: [
+                            'rgb(25, 135, 84)',
+                            'rgb(13, 110, 253)',
+                            'rgb(255, 193, 7)',
+                            'rgb(220, 53, 69)',
+                            'rgb(13, 202, 240)',
+                            'rgb(108, 117, 125)',
+                            'rgb(111, 66, 193)',
+                            'rgb(253, 126, 20)'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                padding: 15,
+                                font: { size: 11 }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const cat = categoryData[context.dataIndex];
+                                    return [
+                                        `${cat.categoryName}`,
+                                        `Revenue: R ${cat.totalRevenue.toLocaleString('en-ZA', {minimumFractionDigits: 2})}`,
+                                        `Units: ${cat.totalQuantitySold}`,
+                                        `Share: ${cat.revenuePercentage.toFixed(1)}%`
+                                    ];
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Category Bar Chart with centred labels
+        function initCategoryBarChart() {
+            const ctx = document.getElementById('categoryBarChart');
+            if (!ctx || !categoryData.length) return;
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: categoryData.map(c => c.categoryName),
+                    datasets: [{
+                        label: 'Units Sold',
+                        data: categoryData.map(c => c.totalQuantitySold),
+                        backgroundColor: 'rgba(13, 110, 253, 0.8)',
+                        borderColor: 'rgb(13, 110, 253)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const cat = categoryData[context.dataIndex];
+                                    return [
+                                        `Units Sold: ${context.parsed.y}`,
+                                        `Revenue: R ${cat.totalRevenue.toLocaleString('en-ZA', {minimumFractionDigits: 2})}`
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Units Sold'
+                            },
+                            ticks: {
+                                stepSize: 5
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                autoSkip: false,
+                                maxRotation: 45,
+                                minRotation: 45,
+                                font: {
+                                    size: 11
+                                },
+                                padding: 5,
+                                align: 'center'
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Animate counters
+        function animateCounters() {
+            document.querySelectorAll('.counter').forEach(counter => {
+                const target = parseInt(counter.getAttribute('data-target'));
+                const duration = 2000;
+                const step = target / (duration / 16);
+                let current = 0;
+
+                const timer = setInterval(() => {
+                    current += step;
+                    if (current >= target) {
+                        current = target;
+                        clearInterval(timer);
+                    }
+                    counter.textContent = Math.floor(current).toLocaleString();
+                }, 16);
+            });
+        }
+
+        // CSV Export
+        function exportToCSV() {
+            const csv = [];
+            
+            csv.push(['TOP PRODUCTS REPORT']);
+            csv.push(['OneClick Pharmacy Management System']);
+            csv.push([]);
+            csv.push(['Report Period:', '@Model.StartDate?.ToString("dd MMM yyyy")', 'to', '@Model.EndDate?.ToString("dd MMM yyyy")']);
+            csv.push(['Generated On:', new Date().toLocaleString('en-GB')]);
+            @if (!string.IsNullOrEmpty(Model.CategoryFilter))
+            {
+                <text>csv.push(['Category Filter:', '@Model.CategoryFilter']);</text>
+            }
+            csv.push([]);
+            csv.push([]);
+            
+            csv.push(['SUMMARY']);
+            csv.push(['Total Revenue', 'R @Model.TotalRevenue.ToString("F2")']);
+            csv.push(['Units Sold', '@Model.TotalUnitsSold']);
+            csv.push(['Unique Products', '@Model.UniqueProductsOrdered']);
+            csv.push(['Total Transactions', '@Model.TotalProductsSold']);
+            csv.push([]);
+            csv.push([]);
+            
+            csv.push(['TOP @Model.TopCount PRODUCTS BY REVENUE']);
+            csv.push(['Rank', 'Product', 'Category', 'Revenue (ZAR)', 'Units Sold', 'Orders', 'Avg Price', 'Revenue Share']);
+            @for (int i = 0; i < Model.TopProductsByRevenue.Count; i++)
+            {
+                var p = Model.TopProductsByRevenue[i];
+                <text>
+                csv.push([
+                    '@(i + 1)',
+                    '@p.ProductName.Replace("\"", "\"\"")' ,
+                    '@p.Category',
+                    '@p.TotalRevenue.ToString("F2")',
+                    '@p.TotalQuantitySold',
+                    '@p.OrderCount',
+                    '@p.AveragePrice.ToString("F2")',
+                    '@p.RevenuePercentage.ToString("F2")%'
+                ]);
+                </text>
+            }
+            csv.push([]);
+            csv.push([]);
+            
+            csv.push(['TOP @Model.TopCount PRODUCTS BY QUANTITY']);
+            csv.push(['Rank', 'Product', 'Category', 'Units Sold', 'Revenue (ZAR)', 'Orders', 'Avg Price']);
+            @for (int i = 0; i < Model.TopProductsByQuantity.Count; i++)
+            {
+                var p = Model.TopProductsByQuantity[i];
+                <text>
+                csv.push([
+                    '@(i + 1)',
+                    '@p.ProductName.Replace("\"", "\"\"")' ,
+                    '@p.Category',
+                    '@p.TotalQuantitySold',
+                    '@p.TotalRevenue.ToString("F2")',
+                    '@p.OrderCount',
+                    '@p.AveragePrice.ToString("F2")'
+                ]);
+                </text>
+            }
+            csv.push([]);
+            csv.push([]);
+            
+            csv.push(['CATEGORY PERFORMANCE']);
+            csv.push(['Category', 'Revenue (ZAR)', 'Units Sold', 'Unique Products', 'Avg Order Value', 'Revenue Share']);
+        @foreach (var cat in Model.CategoryBreakdown)
+        {
+            <text>
+                    csv.push([
+                        '@cat.CategoryName',
+                        '@cat.TotalRevenue.ToString("F2")',
+                        '@cat.TotalQuantitySold',
+                        '@cat.UniqueProducts',
+                        '@cat.AverageOrderValue.ToString("F2")',
+                        '@cat.RevenuePercentage.ToString("F2")%'
+                    ]);
+            </text>
+        }
+            csv.push([]);
+            csv.push([]);
+
+        @if (Model.LowPerformers.Any())
+        {
+            <text>
+                    csv.push(['LOW PERFORMING PRODUCTS']);
+                    csv.push(['Product', 'Category', 'Units Sold', 'Revenue (ZAR)', 'Orders', 'Recommendation']);
+                @foreach (var p in Model.LowPerformers)
+                {
+                    var recommendation = p.TotalQuantitySold < 3 ? "Consider Removing" :
+                                       p.TotalQuantitySold < 5 ? "Review Pricing" : "Increase Marketing";
+                    <text>
+                            csv.push([
+                                '@p.ProductName.Replace("\"", "\"\"")' ,
+                                '@p.Category',
+                                '@p.TotalQuantitySold',
+                                '@p.TotalRevenue.ToString("F2")',
+                                '@p.OrderCount',
+                                '@recommendation'
+                            ]);
+                    </text>
+                }
+                    csv.push([]);
+                    csv.push([]);
+            </text>
+        }
+
+            csv.push(['--- END OF REPORT ---']);
+            csv.push(['OneClick Pharmacy Management System']);
+
+            // Convert to CSV
+            const csvContent = csv.map(row =>
+                row.map(cell => {
+                    const cellStr = String(cell || '');
+                    if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+                        return `"${cellStr.replace(/"/g, '""')}"`;
+                    }
+                    return cellStr;
+                }).join(',')
+            ).join('\r\n');
+
+            // Download
+            const BOM = '\uFEFF';
+            const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            const timestamp = new Date().toISOString().slice(0,10);
+            const fileName = `TopProducts_Report_${timestamp}.csv`;
+
+            link.setAttribute('href', url);
+            link.setAttribute('download', fileName);
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+
+            alert(`✓ Report exported successfully!\n\nFilename: ${fileName}\n\nThe report is now ready to open in Microsoft Excel.`);
+        }
+    </script>
+}
+
+<style>
+    .rank-1 {
+        background-color: rgba(255, 193, 7, 0.1) !important;
+    }
+
+    .rank-2 {
+        background-color: rgba(108, 117, 125, 0.1) !important;
+    }
+
+    .rank-3 {
+        background-color: rgba(205, 127, 50, 0.1) !important;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+
+    .stats-card {
+        transition: transform 0.2s ease;
+    }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+
+    .progress {
+        background-color: #e9ecef;
+    }
+
+    .badge {
+        font-weight: 500;
+    }
+
+    @@media print {
+        .btn, .form-control, .form-select, form
+
+    {
+        display: none !important;
+    }
+
+    .card {
+        break-inside: avoid;
+    }
+
+        .rank-1 {
+            background-color: rgba(255, 215, 0, 0.15) !important;
+            border-left: 4px solid #ffd700 !important;
+        }
+
+        .rank-2 {
+            background-color: rgba(192, 192, 192, 0.15) !important;
+            border-left: 4px solid #c0c0c0 !important;
+        }
+
+        .rank-3 {
+            background-color: rgba(205, 127, 50, 0.15) !important;
+            border-left: 4px solid #cd7f32 !important;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: rgba(13, 110, 253, 0.05);
+            transform: scale(1.01);
+            transition: all 0.2s ease;
+        }
+
+        .stats-card {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+
+            .stats-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+            }
+
+        .stats-icon {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .border-left-success {
+            border-left: 4px solid #198754 !important;
+        }
+
+        .border-left-primary {
+            border-left: 4px solid #0d6efd !important;
+        }
+
+        .border-left-info {
+            border-left: 4px solid #0dcaf0 !important;
+        }
+
+        .border-left-warning {
+            border-left: 4px solid #ffc107 !important;
+        }
+
+        .progress {
+            background-color: #e9ecef;
+            border-radius: 4px;
+        }
+
+        .badge {
+            font-weight: 500;
+            padding: 0.35em 0.65em;
+        }
+        /* Trophy sizing for better visibility */
+        .bi-trophy-fill {
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2));
+        }
+        /* Table improvements */
+        .table thead th {
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 1rem 0.75rem;
+        }
+
+        .table tbody td {
+            padding: 0.875rem 0.75rem;
+            vertical-align: middle;
+        }
+        /* Card headers */
+        .card-header {
+            font-weight: 600;
+            padding: 1rem 1.25rem;
+        }
+
+            .card-header.bg-success,
+            .card-header.bg-primary {
+                border-bottom: 3px solid rgba(255,255,255,0.2);
+            }
+        /* Revenue/price text styling */
+        .text-success {
+            color: #198754 !important;
+            font-weight: 600;
+        }
+        /* Counter animation smoothness */
+        .counter {
+            display: inline-block;
+            min-width: 50px;
+            text-align: left;
+        }
+    @@media print {
+            .btn, .form-control, .form-select, form
+
+    {
+        display: none !important;
+    }
+
+    .card {
+        break-inside: avoid;
+        box-shadow: none !important;
+    }
+
+    .stats-card:hover {
+        transform: none;
+    }
+
+    }
+
+    /* Responsive improvements */
+    @@media (max-width: 768px) {
+        .table thead th
+
+    {
+        font-size: 0.75rem;
+        padding: 0.75rem 0.5rem;
+    }
+
+    .table tbody td {
+        font-size: 0.875rem;
+        padding: 0.75rem 0.5rem;
+    }
+
+    .h4 {
+        font-size: 1.25rem;
+    }
+
+    }
+
+    }
+</style>

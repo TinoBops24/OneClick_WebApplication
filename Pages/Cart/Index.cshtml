@@ -1,0 +1,764 @@
+﻿@page
+@model OneClick_WebApp.Pages.Cart.IndexModel
+@{
+    ViewData["Title"] = "Shopping Cart";
+}
+
+<style>
+    /* Override layout padding for cart page only */
+    body {
+        padding-top: 180px !important;
+    }
+
+    /* Pharmacy blue theme for quantity buttons */
+    .btn-pharmacy {
+        background-color: #1e40af !important;
+        border-color: #1e40af !important;
+        color: white !important;
+        font-size: 1rem;
+        font-weight: 900;
+        padding: 0.5rem 0.75rem;
+        width: 40px;
+        height: 40px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-pharmacy:hover:not(:disabled) {
+        background-color: #1e3a8a !important;
+        border-color: #1e3a8a !important;
+        transform: scale(1.05);
+    }
+
+    .btn-pharmacy:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    /* Toast container positioning */
+    .toast-container {
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        z-index: 9999;
+    }
+</style>
+
+<!-- Toast Container -->
+<div class="toast-container">
+    <div id="cartToast" class="toast align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body">
+                <i id="toastIcon" class="me-2"></i>
+                <span id="toastMessage"></span>
+            </div>
+            <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid bg-light py-4">
+    <div class="container">
+        <!-- Cart Header -->
+        <div class="row mb-4 align-items-center">
+            <div class="col">
+                <h2 class="mb-1">Shopping Cart</h2>
+                <p class="text-muted mb-0">@Model.Cart.Sum(x => x.Quantity) item(s) in your cart</p>
+            </div>
+            <div class="col-auto">
+                <a href="/Products" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-left me-2"></i>Continue Shopping
+                </a>
+            </div>
+        </div>
+
+        @if (!Model.Cart.Any())
+        {
+            <!-- Empty Cart State -->
+            <div class="row justify-content-center">
+                <div class="col-md-7 col-lg-6">
+                    <div class="card border-0 shadow-sm text-center p-4 p-md-5">
+                        <div class="card-body">
+                            <div class="mb-4">
+                                <i class="bi bi-cart-x display-1 text-muted"></i>
+                            </div>
+                            <h4 class="mb-2">Your cart is empty</h4>
+                            <p class="text-muted mb-4">Discover our amazing products and add them to your cart!</p>
+                            <a href="/Products" class="btn btn-primary btn-lg px-4">
+                                <i class="bi bi-bag-plus me-2"></i>Start Shopping
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="row g-4">
+                <!-- Cart Items -->
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-0 border-bottom">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-bag me-2 text-primary"></i>Your Items
+                                </h5>
+                                <form method="post" asp-page-handler="ClearCart" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm"
+                                            onclick="return confirm('Remove all items from cart?')">
+                                        <i class="bi bi-trash me-1"></i>Clear Cart
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Table Headers -->
+                        <div class="d-none d-md-block bg-light border-bottom">
+                            <div class="row align-items-center py-3 px-4">
+                                <div class="col-md-2 text-center">
+                                    <strong class="small text-muted">IMAGE</strong>
+                                </div>
+                                <div class="col-md-4">
+                                    <strong class="small text-muted">PRODUCT</strong>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <strong class="small text-muted">PRICE</strong>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <strong class="small text-muted">QUANTITY</strong>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <strong class="small text-muted">TOTAL</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-body p-0">
+                            @foreach (var cartItem in Model.Cart)
+                            {
+                                var product = Model.ProductsInCart.FirstOrDefault(p => p.DocumentId == cartItem.ProductId);
+
+                                if (product != null)
+                                {
+                                    <div class="border-bottom p-3 p-md-4" id="cart-item-@product.DocumentId">
+                                        <div class="row align-items-center g-3">
+                                            <!-- Product Image -->
+                                            <div class="col-3 col-md-2 text-center">
+                                                @if (!string.IsNullOrEmpty(product.ImageUrl))
+                                                {
+                                                    <img src="@product.ImageUrl" alt="@product.Name"
+                                                         class="img-fluid rounded shadow-sm" style="max-height: 80px; width: auto; object-fit: cover;">
+                                                }
+                                                else
+                                                {
+                                                    <div class="bg-light rounded d-flex align-items-center justify-content-center shadow-sm mx-auto"
+                                                         style="height: 80px; width: 80px;">
+                                                        <i class="bi bi-image text-muted fs-4"></i>
+                                                    </div>
+                                                }
+                                            </div>
+
+                                            <!-- Product Details -->
+                                            <div class="col-9 col-md-4">
+                                                <h6 class="mb-1 fw-semibold">@product.Name</h6>
+                                                @if (!string.IsNullOrEmpty(product.SKU))
+                                                {
+                                                    <small class="text-muted d-block">SKU: @product.SKU</small>
+                                                }
+
+                                                @if (product.StockQuantity > 0 && product.StockQuantity <= 5)
+                                                {
+                                                    <div class="mt-2">
+                                                        <small class="text-warning">
+                                                            <i class="bi bi-info-circle me-1"></i>
+                                                            Low stock: @product.StockQuantity left
+                                                        </small>
+                                                    </div>
+                                                }
+                                                
+                                                <!-- Mobile: Show price here -->
+                                                <div class="d-md-none mt-2">
+                                                    <span class="text-success fw-bold">R @product.Price.ToString("N2")</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Desktop Price -->
+                                            <div class="d-none d-md-block col-md-2 text-center">
+                                                <div class="text-success fw-bold">R @product.Price.ToString("N2")</div>
+                                            </div>
+
+                                            <!-- Quantity Controls - Pharmacy Blue Theme -->
+                                            <div class="col-12 col-md-2">
+                                                <div class="d-flex align-items-center justify-content-center gap-2">
+                                                    <button class="btn btn-pharmacy" type="button"
+                                                            onclick="updateQuantity('@product.DocumentId', @(cartItem.Quantity - 1))"
+                                                            @(cartItem.Quantity <= 1 ? "disabled" : "")
+                                                            title="Decrease quantity">
+                                                        <strong>−</strong>
+                                                    </button>
+                                                    
+                                                    <input type="text" class="form-control text-center fw-bold"
+                                                           value="@cartItem.Quantity"
+                                                           id="quantity-@product.DocumentId"
+                                                           readonly
+                                                           style="background-color: white; border: 2px solid #dee2e6; width: 60px; font-size: 1.1rem;">
+                                                    
+                                                    <button class="btn btn-pharmacy" type="button"
+                                                            onclick="updateQuantity('@product.DocumentId', @(cartItem.Quantity + 1))"
+                                                            @(cartItem.Quantity >= 99 ? "disabled" : "")
+                                                            title="Increase quantity">
+                                                        <strong>+</strong>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <!-- Line Total and Remove -->
+                                            <div class="col-12 col-md-2 text-center">
+                                                <div class="fs-6 fw-bold text-success mb-2">R @((product.Price * cartItem.Quantity).ToString("N2"))</div>
+                                                <button class="btn btn-link text-danger p-0 small"
+                                                        onclick="updateQuantity('@product.DocumentId', 0)"
+                                                        title="Remove item">
+                                                    <i class="bi bi-trash"></i> Remove
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Checkout / Summary Column -->
+                <div class="col-lg-4">
+                    <div class="sticky-lg-top" style="top: 200px;">
+
+                        <!-- Checkout Form -->
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-truck me-2"></i>Checkout Details
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <form method="post" asp-page-handler="Checkout" id="checkoutForm" novalidate>
+                                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                                    <!-- Customer -->
+                                    <div class="bg-light rounded p-3 mb-4">
+                                        <h6 class="mb-2">
+                                            <i class="bi bi-person-circle me-2"></i>Ordering Customer
+                                        </h6>
+                                        <div class="small">
+                                            <strong>@(Model.UserName ?? "Guest")</strong><br>
+                                            <span class="text-muted">@Model.UserEmail</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Contact Number -->
+                                    <div class="mb-4">
+                                        <label asp-for="Input.OrdererPhone" class="form-label fw-bold">
+                                            <i class="bi bi-telephone me-1"></i>Your Contact Number
+                                        </label>
+                                        <input asp-for="Input.OrdererPhone" class="form-control"
+                                               placeholder="e.g., +27123456789" />
+                                        <span asp-validation-for="Input.OrdererPhone" class="text-danger"></span>
+                                        <small class="text-muted">We'll use this to contact you about your order</small>
+                                    </div>
+
+                                    <!-- Gift Toggle -->
+                                    <div class="mb-4">
+                                        <div class="card border-warning">
+                                            <div class="card-body">
+                                                <div class="form-check form-switch">
+                                                    <input asp-for="Input.IsGiftOrder" class="form-check-input"
+                                                           type="checkbox" id="giftOrderToggle">
+                                                    <label asp-for="Input.IsGiftOrder" class="form-check-label fw-bold" for="giftOrderToggle">
+                                                        <i class="bi bi-gift me-2"></i>This is a gift for someone else
+                                                    </label>
+                                                </div>
+                                                <small class="text-muted">Order on behalf of a friend, family member, or colleague</small>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Gift Details -->
+                                    <div id="giftOrderDetails" class="mb-4" style="display: none;">
+                                        <div class="card border-info bg-light">
+                                            <div class="card-header bg-info text-white">
+                                                <h6 class="mb-0">
+                                                    <i class="bi bi-person-heart me-2"></i>Recipient Information
+                                                </h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="mb-3">
+                                                    <label asp-for="Input.RecipientName" class="form-label">Recipient Name *</label>
+                                                    <input asp-for="Input.RecipientName" class="form-control"
+                                                           placeholder="Who will receive this order?" />
+                                                    <span asp-validation-for="Input.RecipientName" class="text-danger"></span>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label asp-for="Input.RecipientPhone" class="form-label">Recipient Phone <small>(optional)</small></label>
+                                                    <input asp-for="Input.RecipientPhone" class="form-control"
+                                                           placeholder="Optional contact number" />
+                                                    <span asp-validation-for="Input.RecipientPhone" class="text-danger"></span>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label asp-for="Input.GiftMessage" class="form-label">Gift Message <small>(optional)</small></label>
+                                                    <textarea asp-for="Input.GiftMessage" class="form-control" rows="2"
+                                                              placeholder="Add a personal message..."></textarea>
+                                                    <span asp-validation-for="Input.GiftMessage" class="text-danger"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Delivery Option -->
+                                    <div class="mb-4">
+                                        <label class="form-label fw-bold">
+                                            <i class="bi bi-truck me-1"></i>Delivery Option
+                                        </label>
+                                        <div class="row g-3">
+                                            <div class="col-6">
+                                                <input asp-for="Input.DeliveryType"
+                                                       type="radio"
+                                                       value="Delivery"
+                                                       class="btn-check"
+                                                       id="deliveryOption"
+                                                       autocomplete="off" />
+                                                <label class="btn btn-outline-primary w-100 text-center p-3" for="deliveryOption">
+                                                    <i class="bi bi-truck fs-4 d-block mb-1"></i>
+                                                    <strong>Delivery</strong><br>
+                                                    <small id="delivery-option-fee">
+                                                        @(Model.EstimatedDeliveryFee == 0 ? "FREE" : "R " + Model.EstimatedDeliveryFee.ToString("N2"))
+                                                    </small>
+                                                </label>
+                                            </div>
+                                            <div class="col-6">
+                                                <input asp-for="Input.DeliveryType"
+                                                       type="radio"
+                                                       value="Pickup"
+                                                       class="btn-check"
+                                                       id="pickupOption"
+                                                       autocomplete="off" />
+                                                <label class="btn btn-outline-success w-100 text-center p-3" for="pickupOption">
+                                                    <i class="bi bi-shop fs-4 d-block mb-1"></i>
+                                                    <strong>Pickup</strong><br>
+                                                    <small>FREE</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Delivery Address -->
+                                    <div id="deliveryAddressSection" class="mb-4">
+                                        <label asp-for="Input.DeliveryAddress" class="form-label fw-bold">
+                                            <i class="bi bi-geo-alt me-1"></i>Delivery Address
+                                        </label>
+                                        <textarea asp-for="Input.DeliveryAddress" class="form-control" rows="3"
+                                                  placeholder="Complete delivery address including landmarks"></textarea>
+                                        <span asp-validation-for="Input.DeliveryAddress" class="text-danger"></span>
+                                    </div>
+
+                                    <!-- Delivery Instructions -->
+                                    <div id="deliveryInstructionsSection" class="mb-4">
+                                        <label asp-for="Input.DeliveryInstructions" class="form-label">
+                                            <i class="bi bi-chat-text me-1"></i>Delivery Instructions <small>(optional)</small>
+                                        </label>
+                                        <textarea asp-for="Input.DeliveryInstructions" class="form-control" rows="2"
+                                                  placeholder="Special instructions for delivery"></textarea>
+                                        <span asp-validation-for="Input.DeliveryInstructions" class="text-danger"></span>
+                                    </div>
+
+                                    <!-- Contact Preferences -->
+                                    <div class="mb-4">
+                                        <label asp-for="Input.PreferredContact" class="form-label">
+                                            <i class="bi bi-chat-dots me-1"></i>Preferred Contact Method
+                                        </label>
+                                        <select asp-for="Input.PreferredContact" asp-items="Html.GetEnumSelectList<OneClick_WebApp.Pages.Cart.IndexModel.ContactMethod>()"
+                                                class="form-select">
+                                        </select>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Order Summary -->
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-calculator me-2"></i>Order Summary
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Items (@Model.Cart.Sum(x => x.Quantity)):</span>
+                                    <span id="items-subtotal">R @Model.GrandTotal.ToString("N2")</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Delivery:</span>
+                                    <span id="delivery-fee-summary" class="@(Model.EstimatedDeliveryFee == 0 ? "text-success" : "")">
+                                        @(Model.EstimatedDeliveryFee == 0 ? "FREE" : "R " + Model.EstimatedDeliveryFee.ToString("N2"))
+                                    </span>
+                                </div>
+                                @if (Model.GrandTotal >= 500)
+                                {
+                                    <small class="text-success d-block mb-2">
+                                        <i class="bi bi-check-circle me-1"></i>Free delivery on orders of R500 or more!
+                                    </small>
+                                }
+
+                                <hr>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <strong class="fs-5">Total:</strong>
+                                    <strong class="fs-5 text-success" id="grand-total-summary">R @Model.TotalWithDelivery.ToString("N2")</strong>
+                                </div>
+
+                                <!-- Checkout Button -->
+                                <div class="d-grid">
+                                    <button type="submit" form="checkoutForm" class="btn btn-success btn-lg">
+                                        <i class="bi bi-check-circle me-2"></i>
+                                        Place Order
+                                    </button>
+                                </div>
+
+                                <p class="text-muted small text-center mt-3 mb-0">
+                                    By placing this order, you agree to our terms and conditions.
+                                </p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        // Culture-safe server values
+        const CART_NUMBERS = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(new
+            {
+                grandTotal = Model.GrandTotal,
+                deliveryFee = Model.EstimatedDeliveryFee
+            }));
+
+        // Base numbers
+        let BASE_SUBTOTAL = Number(CART_NUMBERS.grandTotal) || 0;
+        let BASE_DELIVERY_FEE = Number(CART_NUMBERS.deliveryFee) || 0;
+
+        // DOM elements
+        const deliveryFeeSummaryEl = document.getElementById('delivery-fee-summary');
+        const grandTotalSummaryEl = document.getElementById('grand-total-summary');
+        const deliveryOptionFeeEl = document.getElementById('delivery-option-fee');
+        const addressSection = document.getElementById('deliveryAddressSection');
+        const instructionsSection = document.getElementById('deliveryInstructionsSection');
+        const addressField = document.querySelector('[name="Input.DeliveryAddress"]');
+        const giftToggle = document.getElementById('giftOrderToggle');
+        const giftDetails = document.getElementById('giftOrderDetails');
+
+        // Helper
+        function formatMoney(n) {
+            const num = Number(n || 0);
+            return 'R ' + num.toFixed(2);
+        }
+
+        // Bootstrap Toast Notification
+        function showToast(message, type = 'success') {
+            const toastEl = document.getElementById('cartToast');
+            const toastIcon = document.getElementById('toastIcon');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastBody = toastEl.querySelector('.toast-body');
+
+            // Set icon and color based on type
+            if (type === 'success') {
+                toastIcon.className = 'bi bi-check-circle-fill text-success me-2';
+                toastEl.classList.remove('bg-danger', 'bg-warning', 'bg-info');
+                toastEl.classList.add('bg-success');
+                toastBody.classList.add('text-white');
+            } else if (type === 'error') {
+                toastIcon.className = 'bi bi-exclamation-triangle-fill text-white me-2';
+                toastEl.classList.remove('bg-success', 'bg-warning', 'bg-info');
+                toastEl.classList.add('bg-danger');
+                toastBody.classList.add('text-white');
+            } else if (type === 'info') {
+                toastIcon.className = 'bi bi-info-circle-fill text-white me-2';
+                toastEl.classList.remove('bg-success', 'bg-danger', 'bg-warning');
+                toastEl.classList.add('bg-info');
+                toastBody.classList.add('text-white');
+            } else if (type === 'warning') {
+                toastIcon.className = 'bi bi-exclamation-circle-fill text-dark me-2';
+                toastEl.classList.remove('bg-success', 'bg-danger', 'bg-info');
+                toastEl.classList.add('bg-warning');
+                toastBody.classList.remove('text-white');
+            }
+
+            toastMessage.textContent = message;
+
+            const toast = new bootstrap.Toast(toastEl, {
+                autohide: true,
+                delay: 3000
+            });
+            toast.show();
+        }
+
+        // Gift UI
+        function applyGiftToggleUI() {
+            if (!giftToggle || !giftDetails) return;
+            if (giftToggle.checked) {
+                giftDetails.style.display = 'block';
+                giftDetails.style.opacity = '0';
+                setTimeout(() => {
+                    giftDetails.style.transition = 'opacity 0.25s ease';
+                    giftDetails.style.opacity = '1';
+                }, 10);
+            } else {
+                giftDetails.style.transition = 'opacity 0.25s ease';
+                giftDetails.style.opacity = '0';
+                setTimeout(() => { giftDetails.style.display = 'none'; }, 250);
+            }
+        }
+
+        // Delivery vs Pickup calculation + UI updates
+        function updateDeliveryOption() {
+            const pickupRadio = document.getElementById('pickupOption');
+            const deliveryRadio = document.getElementById('deliveryOption');
+
+            if (!pickupRadio || !deliveryRadio) return;
+
+            const isPickup = pickupRadio.checked;
+
+            // Server rule: free if subtotal ≥ 500, otherwise 50; pickup always 0
+            const threshold = 500;
+            const computedFee = isPickup ? 0 : (BASE_SUBTOTAL >= threshold ? 0 : 50);
+            const finalTotal = BASE_SUBTOTAL + computedFee;
+
+            // Toggle address sections
+            if (addressSection && instructionsSection) {
+                if (isPickup) {
+                    addressSection.style.display = 'none';
+                    instructionsSection.style.display = 'none';
+                    if (addressField) addressField.value = 'Pickup from store';
+                } else {
+                    addressSection.style.display = 'block';
+                    instructionsSection.style.display = 'block';
+                    if (addressField && addressField.value === 'Pickup from store') {
+                        addressField.value = '';
+                    }
+                }
+            }
+
+            // Update delivery fee displays
+            if (deliveryFeeSummaryEl) {
+                deliveryFeeSummaryEl.textContent = computedFee === 0 ? 'FREE' : formatMoney(computedFee);
+                deliveryFeeSummaryEl.className = computedFee === 0 ? 'text-success' : '';
+            }
+            if (deliveryOptionFeeEl) {
+                const newFeeText = deliveryRadio.checked
+                    ? (computedFee === 0 ? 'FREE' : formatMoney(computedFee))
+                    : 'FREE';
+                deliveryOptionFeeEl.textContent = newFeeText;
+            }
+
+            // Totals
+            if (grandTotalSummaryEl) {
+                grandTotalSummaryEl.textContent = formatMoney(finalTotal);
+            }
+
+            // Visual active state on labels
+            const deliveryLabel = document.querySelector('label[for="deliveryOption"]');
+            const pickupLabel = document.querySelector('label[for="pickupOption"]');
+            if (deliveryLabel && pickupLabel) {
+                if (isPickup) {
+                    pickupLabel.classList.add('active');
+                    deliveryLabel.classList.remove('active');
+                } else {
+                    deliveryLabel.classList.add('active');
+                    pickupLabel.classList.remove('active');
+                }
+            }
+        }
+
+        // Quantity update with loading indicator
+        async function updateQuantity(productId, newQuantity) {
+            console.log('updateQuantity called:', productId, newQuantity);
+
+            newQuantity = parseInt(newQuantity, 10);
+
+            if (newQuantity < 1) {
+                if (confirm('Remove this item from your cart?')) {
+                    await removeFromCart(productId);
+                }
+                return;
+            }
+
+            if (newQuantity > 99) {
+                showToast('Maximum quantity is 99', 'warning');
+                return;
+            }
+
+            // Show loading indicator
+            LoadingManager.showHourglass('Updating quantity...');
+
+            // Disable all buttons immediately
+            const allButtons = document.querySelectorAll('button[onclick*="updateQuantity"]');
+            const allInputs = document.querySelectorAll('input[id^="quantity-"]');
+
+            allButtons.forEach(btn => {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+            });
+            allInputs.forEach(input => input.style.opacity = '0.5');
+
+            try {
+                const formData = new FormData();
+                formData.append('productId', productId);
+                formData.append('quantity', newQuantity);
+
+                const token = document.querySelector('input[name="__RequestVerificationToken"]');
+                if (token) formData.append('__RequestVerificationToken', token.value);
+
+                const response = await fetch('/Cart?handler=UpdateQuantity', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                // Hide loading indicator
+                LoadingManager.hide();
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        showToast('Cart updated successfully', 'success');
+                        setTimeout(() => window.location.reload(), 1000);
+                    } else {
+                        showToast(result.message || 'Failed to update quantity', 'error');
+                        allButtons.forEach(btn => {
+                            btn.disabled = false;
+                            btn.style.opacity = '1';
+                        });
+                        allInputs.forEach(input => input.style.opacity = '1');
+                    }
+                } else {
+                    throw new Error('Server error: ' + response.status);
+                }
+            } catch (err) {
+                // Hide loading on error
+                LoadingManager.hide();
+                console.error('Error updating quantity:', err);
+                showToast('Failed to update cart. Please refresh and try again.', 'error');
+                allButtons.forEach(btn => {
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                });
+                allInputs.forEach(input => input.style.opacity = '1');
+            }
+        }
+
+        // Remove from cart with loading indicator
+        async function removeFromCart(productId) {
+            console.log('removeFromCart called:', productId);
+
+            // Show loading indicator
+            LoadingManager.showHourglass('Removing item...');
+
+            try {
+                const formData = new FormData();
+                formData.append('productId', productId);
+
+                const token = document.querySelector('input[name="__RequestVerificationToken"]');
+                if (token) formData.append('__RequestVerificationToken', token.value);
+
+                const response = await fetch('/Cart?handler=RemoveFromCart', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                // Hide loading indicator
+                LoadingManager.hide();
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        showToast('Item removed from cart', 'success');
+                        const item = document.getElementById(`cart-item-${productId}`);
+                        if (item) {
+                            item.style.transition = 'opacity 0.25s ease';
+                            item.style.opacity = '0';
+                            setTimeout(() => window.location.reload(), 500);
+                        } else {
+                            setTimeout(() => window.location.reload(), 500);
+                        }
+                    } else {
+                        showToast(result.message || 'Failed to remove item', 'error');
+                    }
+                } else {
+                    throw new Error('Server error: ' + response.status);
+                }
+            } catch (err) {
+                // Hide loading on error
+                LoadingManager.hide();
+                console.error('Error removing item:', err);
+                showToast('Failed to remove item. Please try again.', 'error');
+            }
+        }
+
+        // Place Order button - Show cart animation
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Cart page loaded, initialising...');
+
+            try {
+                // Gift UI
+                applyGiftToggleUI();
+                if (giftToggle) giftToggle.addEventListener('change', applyGiftToggleUI);
+
+                // Bind radio change
+                const deliveryRadio = document.getElementById('deliveryOption');
+                const pickupRadio = document.getElementById('pickupOption');
+
+                if (deliveryRadio && pickupRadio) {
+                    deliveryRadio.addEventListener('change', function () {
+                        if (this.checked) updateDeliveryOption();
+                    });
+                    pickupRadio.addEventListener('change', function () {
+                        if (this.checked) updateDeliveryOption();
+                    });
+
+                    // Initial state from server
+                    const initialDeliveryType = '@(Model.Input?.DeliveryType ?? OneClick_WebApp.Pages.Cart.IndexModel.DeliveryOption.Delivery)';
+                    if (initialDeliveryType === 'Pickup') {
+                        pickupRadio.checked = true;
+                    } else {
+                        deliveryRadio.checked = true;
+                    }
+                }
+
+                // Initial totals render
+                updateDeliveryOption();
+
+                // Clear Cart button with loading indicator
+                const clearCartBtn = document.querySelector('button[onclick*="ClearCart"]');
+                if (clearCartBtn) {
+                    const clearCartForm = clearCartBtn.closest('form');
+                    if (clearCartForm) {
+                        clearCartForm.addEventListener('submit', function(e) {
+                            if (confirm('Remove all items from cart?')) {
+                                LoadingManager.showHourglass('Clearing cart...');
+                                // Form will submit normally
+                            } else {
+                                e.preventDefault();
+                            }
+                        });
+                    }
+                }
+
+                console.log('Cart page initialisation complete');
+            } catch (e) {
+                console.error('[Cart init error]', e);
+                showToast('Cart script error: ' + (e?.message || e), 'error');
+            }
+        });
+    </script>
+}

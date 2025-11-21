@@ -1,0 +1,741 @@
+﻿@page "{id}"
+@model OneClick_WebApp.Pages.Products.DetailsModel
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{
+    ViewData["Title"] = Model.Product.Name;
+}
+
+<style>
+    .product-page {
+        margin-top: 2rem;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    .breadcrumb-section {
+        background: #f8f9fa;
+        padding: 1rem 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .breadcrumb {
+        background: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .breadcrumb-item a {
+        color: #1e40af;
+        text-decoration: none;
+    }
+
+        .breadcrumb-item a:hover {
+            text-decoration: underline;
+        }
+
+    .product-images {
+        position: relative;
+    }
+
+    .main-image-container {
+        position: relative;
+        background: #f8f9fa;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 1rem;
+        border: 1px solid #e9ecef;
+    }
+
+    .main-product-image {
+        width: 100%;
+        height: 500px;
+        object-fit: contain;
+        cursor: zoom-in;
+        transition: transform 0.3s ease;
+    }
+
+    .image-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(255,255,255,0.9);
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        z-index: 10;
+    }
+
+        .image-nav:hover {
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .image-nav.prev {
+            left: 10px;
+        }
+
+        .image-nav.next {
+            right: 10px;
+        }
+
+    .image-thumbnails {
+        display: flex;
+        gap: 0.5rem;
+        overflow-x: auto;
+        padding: 0.5rem 0;
+    }
+
+    .thumbnail {
+        min-width: 80px;
+        height: 80px;
+        border-radius: 8px;
+        border: 2px solid transparent;
+        cursor: pointer;
+        object-fit: cover;
+        transition: all 0.3s ease;
+    }
+
+        .thumbnail:hover,
+        .thumbnail.active {
+            border-color: #1e40af;
+        }
+
+    .product-info {
+        padding-left: 2rem;
+    }
+
+    .product-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .product-title {
+        font-size: 2.25rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+        line-height: 1.2;
+    }
+
+    .reviews-count {
+        color: #6b7280;
+        font-size: 0.9rem;
+    }
+
+    .price-section {
+        margin: 1.5rem 0;
+    }
+
+    .current-price {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #059669;
+    }
+
+    .original-price {
+        font-size: 1.25rem;
+        color: #9ca3af;
+        text-decoration: line-through;
+        margin-right: 0.5rem;
+    }
+
+    .product-description {
+        color: #6b7280;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+
+    .product-options {
+        margin-bottom: 2rem;
+    }
+
+    .option-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .option-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+        display: block;
+        text-transform: uppercase;
+        font-size: 0.875rem;
+        letter-spacing: 0.05em;
+    }
+
+    .availability-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background: #f0fdf4;
+        border-radius: 8px;
+        border-left: 4px solid #059669;
+    }
+
+    .availability-status {
+        color: #059669;
+        font-weight: 600;
+    }
+
+    .sku-info {
+        color: #6b7280;
+        font-size: 0.9rem;
+    }
+
+    .quantity-cart-section {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .quantity-controls {
+        display: flex;
+        align-items: center;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        background: white;
+    }
+
+    .quantity-btn {
+        background: none;
+        border: none;
+        padding: 0.75rem;
+        cursor: pointer;
+        font-size: 1.1rem;
+        color: #6b7280;
+        transition: color 0.3s ease;
+    }
+
+        .quantity-btn:hover {
+            color: #1e40af;
+        }
+
+    .quantity-input {
+        border: none;
+        text-align: center;
+        width: 60px;
+        padding: 0.75rem 0.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+        .quantity-input:focus {
+            outline: none;
+        }
+
+    .add-to-cart-btn {
+        background: #1f2937;
+        color: white;
+        border: none;
+        padding: 0.875rem 2rem;
+        border-radius: 8px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        flex: 1;
+        max-width: 200px;
+    }
+
+        .add-to-cart-btn:hover {
+            background: #111827;
+            transform: translateY(-1px);
+        }
+
+    .social-actions {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .wishlist-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: none;
+        border: none;
+        color: #6b7280;
+        cursor: pointer;
+        transition: color 0.3s ease;
+    }
+
+        .wishlist-btn:hover {
+            color: #ef4444;
+        }
+
+    .product-tabs {
+        margin-top: 4rem;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .tab-nav {
+        display: flex;
+        border-bottom: 1px solid #e5e7eb;
+        margin-bottom: 2rem;
+    }
+
+    .tab-btn {
+        background: none;
+        border: none;
+        padding: 1rem 1.5rem;
+        font-weight: 600;
+        color: #6b7280;
+        cursor: pointer;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s ease;
+    }
+
+        .tab-btn.active {
+            color: #1e40af;
+            border-bottom-color: #1e40af;
+        }
+
+    .tab-content {
+        display: none;
+        line-height: 1.7;
+        color: #4b5563;
+    }
+
+        .tab-content.active {
+            display: block;
+        }
+
+    .pharmaceutical-info {
+        background: #fef3c7;
+        border: 1px solid #f59e0b;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+    }
+
+        .pharmaceutical-info h4 {
+            color: #92400e;
+            margin-bottom: 1rem;
+        }
+
+        .pharmaceutical-info ul {
+            color: #92400e;
+            margin: 0;
+        }
+
+    .related-products {
+        margin-top: 4rem;
+        padding-top: 2rem;
+        border-top: 1px solid #e5e7eb;
+    }
+
+        .related-products h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            color: #1f2937;
+        }
+
+    .notification-container {
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        width: 350px;
+        z-index: 1050;
+    }
+
+    .alert {
+        padding: 1rem 1.25rem;
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        animation: slideIn 0.3s ease;
+    }
+
+    .alert-success {
+        background: #d1fae5;
+        color: #065f46;
+        border-left: 4px solid #059669;
+    }
+
+    .alert-danger {
+        background: #fee2e2;
+        color: #991b1b;
+        border-left: 4px solid #ef4444;
+    }
+
+    @@keyframes slideIn {
+        from
+
+    {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    }
+
+    @@media (max-width: 768px) {
+        .product-info
+
+    {
+        padding-left: 0;
+        margin-top: 2rem;
+    }
+
+    .product-title {
+        font-size: 1.75rem;
+    }
+
+    .quantity-cart-section {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .add-to-cart-btn {
+        max-width: none;
+    }
+
+    }
+</style>
+
+<div class="product-page">
+    <!-- Notification Container -->
+    <div id="notification-container" class="notification-container" aria-live="polite"></div>
+
+    <!-- Breadcrumb Section -->
+    <div class="breadcrumb-section">
+        <div class="container">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Home</a></li>
+                    <li class="breadcrumb-item"><a href="/Products/Index">Products</a></li>
+                    @if (Model.Product.Category != null)
+                    {
+                        <li class="breadcrumb-item"><a href="/Products/Index?categoryFilter=@Model.Product.Category.Id">@Model.Product.Category.Name</a></li>
+                    }
+                    <li class="breadcrumb-item active" aria-current="page">@Model.Product.Name</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <!-- Product Images -->
+            <div class="col-lg-6">
+                <div class="product-images">
+                    <div class="main-image-container">
+                        <img src="@(string.IsNullOrEmpty(Model.Product.ImageUrl) ? "https://placehold.co/500x500/f8f9fa/6b7280?text=No+Image" : Model.Product.ImageUrl)"
+                             alt="@Model.Product.Name"
+                             class="main-product-image"
+                             id="mainProductImage">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Information -->
+            <div class="col-lg-6">
+                <div class="product-info">
+                    <h1 class="product-title">@Model.Product.Name</h1>
+
+                    <div class="reviews-count">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star-half-alt text-warning"></i>
+                        (2 reviews)
+                    </div>
+
+                    <div class="price-section">
+                        <span class="original-price">@(((decimal)Model.Product.Price * 1.2m).ToString("C", new System.Globalization.CultureInfo("en-ZA")))</span>
+                        <span class="current-price">@Model.Product.Price.ToString("C", new System.Globalization.CultureInfo("en-ZA"))</span>
+                    </div>
+
+                    <p class="product-description">
+                        @(string.IsNullOrEmpty(Model.Product.Description) ? "Professional pharmacy product with quality assurance. Consult with healthcare professionals for proper usage and dosage recommendations." : Model.Product.Description)
+                    </p>
+
+                    <!-- Availability Info -->
+                    <div class="availability-info">
+                        <div>
+                            <div class="availability-status">
+                                <strong>AVAILABILITY: </strong>
+                                <span style="color: #059669;">AVAILABLE</span>
+                            </div>
+                            <div class="sku-info">
+                                <strong>SKU: </strong>@(Model.Product.Id?.ToUpper().Substring(0, Math.Min(10, Model.Product.Id.Length)) ?? "N/A")
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product Options -->
+                    <div class="product-options">
+                        <div class="option-group">
+                            <label class="option-label">Pack Size:</label>
+                            <select class="form-select" style="max-width: 200px;">
+                                <option>Please Choose</option>
+                                <option>Regular</option>
+                               @*  <option>Pack of 3</option>
+                                <option>Pack of 6</option>
+                                <option>Bulk Pack (12)</option> *@
+                            </select>
+                        </div>
+
+                        <div class="option-group">
+                            <label class="option-label">Strength:</label>
+                            <select class="form-select" style="max-width: 200px;">
+                                <option>Please Choose</option>
+                                <option>N/A</option>
+                                <option>Regular</option>
+                                <option>Extra Strength</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <!-- Quantity and Add to Cart -->
+                        <div class="quantity-cart-section">
+                            <div class="quantity-controls">
+                                <button class="quantity-btn" onclick="decreaseQuantity()">-</button>
+                                <input type="number" class="quantity-input" id="quantityInput" value="1" min="1" max="99">
+                                <button class="quantity-btn" onclick="increaseQuantity()">+</button>
+                            </div>
+                            <button class="add-to-cart-btn" id="addToCartBtn" data-product-id="@Model.Product.Id">
+                                Add to Cart
+                            </button>
+                        </div>
+
+                        <!-- Social Actions -->
+                        <div class="social-actions">
+                            <button class="wishlist-btn" id="wishlistBtn">
+                                <i class="far fa-heart"></i>
+                                Save to Wishlist
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center" style="padding: 2rem; background: #f8f9fa; border-radius: 8px;">
+                            <p class="mb-3" style="color: #6b7280;">Please sign in to purchase this product</p>
+                            <a href="/Account/Login?returnUrl=/Products/Details/@Model.Product.Id"
+                               class="add-to-cart-btn"
+                               style="display: inline-block; text-decoration: none; text-align: center;">
+                                Sign In to Buy
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Tabs -->
+        <div class="product-tabs">
+            <div class="tab-nav">
+                <button class="tab-btn active" onclick="showTab('description')">Description</button>
+                <button class="tab-btn" onclick="showTab('information')">Additional Information</button>
+                <button class="tab-btn" onclick="showTab('reviews')">Reviews (2)</button>
+            </div>
+
+            <div id="description" class="tab-content active">
+                <p>@(Model.Product.Description ?? "This is a high-quality pharmacy product that meets all regulatory standards. Our commitment to excellence ensures that every product we offer has been carefully selected and tested for safety and efficacy.")</p>
+
+                <div class="pharmaceutical-info">
+                    <h4><i class="fas fa-exclamation-triangle me-2"></i>Important Pharmaceutical Information</h4>
+                    <ul>
+                        <li>Always read the label and follow directions for use</li>
+                        <li>Store in a cool, dry place away from direct sunlight</li>
+                        <li>Keep out of reach of children</li>
+                        <li>Consult your healthcare professional if symptoms persist</li>
+                        <li>This product is registered with the South African Health Products Regulatory Authority</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div id="information" class="tab-content">
+                <table class="table">
+                    <tbody>
+                        <tr>
+                            <td><strong>Category</strong></td>
+                            <td>@(Model.Product.Category?.Name ?? "General")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Brand</strong></td>
+                            <td>Commerce Craft Pharmacy</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Country of Origin</strong></td>
+                            <td>South Africa</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Regulatory Status</strong></td>
+                            <td>SAHPRA Approved</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="reviews" class="tab-content">
+                <div style="background: #f8f9fa; padding: 2rem; border-radius: 8px; text-align: center; color: #6b7280;">
+                    <i class="fas fa-star-half-alt fa-3x mb-3"></i>
+                    <p>Review system coming soon! We're working on implementing customer reviews to help you make informed decisions.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Anti-forgery token -->
+<input type="hidden" id="antiForgeryToken" value="@(Antiforgery.GetAndStoreTokens(HttpContext).RequestToken)" />
+
+@section Scripts {
+    <script>
+        // Notification system
+        function showNotification(message, type = 'success') {
+            const container = document.getElementById('notification-container');
+            if (!container) return;
+
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.innerHTML = `
+                <strong>${type === 'success' ? 'Success!' : 'Error!'}</strong> ${message}
+                <button type="button" class="btn-close float-end" onclick="this.parentElement.remove()"></button>
+            `;
+
+            container.appendChild(alertDiv);
+
+            setTimeout(() => {
+                if (alertDiv.parentElement) {
+                    alertDiv.remove();
+                }
+            }, 4000);
+        }
+
+        // Quantity controls
+        function increaseQuantity() {
+            const input = document.getElementById('quantityInput');
+            const currentValue = parseInt(input.value) || 1;
+            if (currentValue < 99) {
+                input.value = currentValue + 1;
+            }
+        }
+
+        function decreaseQuantity() {
+            const input = document.getElementById('quantityInput');
+            const currentValue = parseInt(input.value) || 1;
+            if (currentValue > 1) {
+                input.value = currentValue - 1;
+            }
+        }
+
+        // Tab functionality
+        function showTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Remove active class from all tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+
+            // Add active class to clicked button
+            event.target.classList.add('active');
+        }
+
+        // Add to Cart functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const addToCartBtn = document.getElementById('addToCartBtn');
+            const wishlistBtn = document.getElementById('wishlistBtn');
+            const quantityInput = document.getElementById('quantityInput');
+            const token = document.getElementById('antiForgeryToken')?.value;
+
+            if (addToCartBtn) {
+                addToCartBtn.addEventListener('click', async function() {
+                    const productId = this.dataset.productId;
+                    const quantity = parseInt(quantityInput.value) || 1;
+
+                    if (!token) {
+                        showNotification('Security error. Please refresh the page.', 'danger');
+                        return;
+                    }
+
+                    this.disabled = true;
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Adding...';
+
+                    try {
+                        const formData = new URLSearchParams();
+                        formData.append('productId', productId);
+                        formData.append('quantity', quantity);
+
+                        const response = await fetch('/Products?handler=AddToCartAjax', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                'RequestVerificationToken': token
+                            },
+                            body: formData.toString()
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            showNotification(result.message, 'success');
+                            sessionStorage.setItem('cart', JSON.stringify(result.cart));
+
+                            if (typeof refreshHeaderBadges === 'function') {
+                                refreshHeaderBadges();
+                            }
+
+                            quantityInput.value = 1;
+                        } else {
+                            showNotification(result.message || 'Failed to add product to cart.', 'danger');
+                        }
+                    } catch (error) {
+                        console.error('Error adding to cart:', error);
+                        showNotification('Failed to add product to cart. Please try again.', 'danger');
+                    } finally {
+                        this.disabled = false;
+                        this.innerHTML = 'Add to Cart';
+                    }
+                });
+            }
+
+            if (wishlistBtn) {
+                wishlistBtn.addEventListener('click', function() {
+                    const icon = this.querySelector('i');
+                    if (icon.classList.contains('far')) {
+                        icon.classList.remove('far');
+                        icon.classList.add('fas');
+                        this.innerHTML = '<i class="fas fa-heart"></i> Saved to Wishlist';
+                        showNotification('Product added to wishlist!', 'success');
+                    } else {
+                        icon.classList.remove('fas');
+                        icon.classList.add('far');
+                        this.innerHTML = '<i class="far fa-heart"></i> Save to Wishlist';
+                        showNotification('Product removed from wishlist!', 'success');
+                    }
+                });
+            }
+        });
+    </script>
+}

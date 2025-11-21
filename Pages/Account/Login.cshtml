@@ -1,0 +1,790 @@
+﻿@page
+
+@model OneClick_WebApp.Pages.Account.LoginModel
+@{
+    ViewData["Title"] = "Log In";
+}
+
+<style>
+    /* Hide default ASP.NET validation messages */
+    span[data-valmsg-for] {
+        display: none !important;
+    }
+
+    .validation-summary-errors {
+        display: none !important;
+    }
+
+    
+    .page-wrapper {
+        min-height: calc(100vh - 140px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+    }
+
+    .login-container {
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(10px);
+        padding: 2rem 2.5rem;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        max-width: 380px;
+        width: 100%;
+        transition: box-shadow 0.3s ease-in-out;
+    }
+
+        .login-container:hover {
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
+        }
+
+    h1 {
+        font-weight: 700;
+        font-size: 1.75rem;
+        margin-bottom: 0.5rem;
+        color: #212529;
+        text-align: center;
+        letter-spacing: 0.03em;
+    }
+
+    .subtitle {
+        font-weight: 400;
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+
+    .form-floating {
+        margin-bottom: 1rem !important;
+    }
+
+    .form-floating > input {
+        border-radius: 0.5rem;
+        box-shadow: none !important;
+        border: 1.5px solid #ced4da;
+        transition: border-color 0.3s ease;
+        font-size: 0.95rem;
+        padding: 0.75rem 0.75rem;
+    }
+
+        .form-floating > input:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 8px rgba(13, 110, 253, 0.3) !important;
+        }
+
+    .form-floating > label {
+        padding: 0.75rem 0.75rem;
+    }
+
+    .btn-primary {
+        border-radius: 50px;
+        font-weight: 600;
+        padding: 0.65rem 0;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        margin-top: 0.5rem;
+    }
+
+        .btn-primary:hover, .btn-primary:focus {
+            background-color: #084298;
+            border-color: #084298;
+            box-shadow: 0 4px 15px rgba(8, 66, 152, 0.4);
+            transform: translateY(-1px);
+        }
+
+    .password-section {
+        display: none;
+        animation: slideDown 0.3s ease-in-out;
+    }
+
+        .password-section.show {
+            display: block;
+        }
+
+    .welcome-message {
+        background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+        border-left: 4px solid #2196f3;
+        padding: 0.875rem 1rem;
+        margin-bottom: 1rem;
+        border-radius: 0 8px 8px 0;
+        display: none;
+    }
+
+        .welcome-message.show {
+            display: block;
+            animation: slideDown 0.3s ease-in-out;
+        }
+
+        .welcome-message h4 {
+            margin: 0 0 0.25rem 0;
+            color: #1976d2;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .welcome-message p {
+            margin: 0;
+            color: #424242;
+            font-size: 0.875rem;
+        }
+
+    .back-link {
+        color: #6c757d;
+        text-decoration: none;
+        font-size: 0.875rem;
+        display: none;
+        margin-bottom: 0.75rem;
+    }
+
+        .back-link.show {
+            display: block;
+        }
+
+        .back-link:hover {
+            color: #0d6efd;
+        }
+
+    .links {
+        margin-top: 1.25rem;
+        font-size: 0.9rem;
+        text-align: center;
+    }
+
+        .links p {
+            margin-bottom: 0.5rem;
+        }
+
+        .links a {
+            color: #0d6efd;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+            .links a:hover {
+                color: #084298;
+                text-decoration: underline;
+            }
+
+    /* Toast Notification System */
+    .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        max-width: 400px;
+        pointer-events: none;
+    }
+
+    .toast {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        margin-bottom: 12px;
+        padding: 16px 20px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        pointer-events: auto;
+        opacity: 0;
+        transform: translateX(100%);
+        transition: all 0.3s ease-in-out;
+        border-left: 4px solid #e5e7eb;
+        max-width: 100%;
+        word-wrap: break-word;
+    }
+
+    .toast.show {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    .toast.hide {
+        opacity: 0;
+        transform: translateX(100%);
+        margin-bottom: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        max-height: 0;
+    }
+
+    .toast.success {
+        border-left-color: #10b981;
+        background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+    }
+
+    .toast.error {
+        border-left-color: #ef4444;
+        background: linear-gradient(135deg, #fef2f2 0%, #fef2f2 100%);
+    }
+
+    .toast.warning {
+        border-left-color: #f59e0b;
+        background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    }
+
+    .toast.info {
+        border-left-color: #3b82f6;
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    }
+
+    .toast-icon {
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+    .toast.success .toast-icon {
+        color: #10b981;
+    }
+
+    .toast.error .toast-icon {
+        color: #ef4444;
+    }
+
+    .toast.warning .toast-icon {
+        color: #f59e0b;
+    }
+
+    .toast.info .toast-icon {
+        color: #3b82f6;
+    }
+
+    .toast-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .toast-title {
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 4px;
+        color: #111827;
+        line-height: 1.2;
+    }
+
+    .toast-message {
+        font-size: 13px;
+        color: #6b7280;
+        line-height: 1.4;
+        margin: 0;
+    }
+
+    .toast-close {
+        background: none;
+        border: none;
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        color: #9ca3af;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+        .toast-close:hover {
+            background: rgba(0, 0, 0, 0.1);
+            color: #374151;
+        }
+
+    /* Field Error Styling */
+    .field-error {
+        color: #ef4444;
+        font-size: 11px;
+        margin-top: 4px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        opacity: 0;
+        transform: translateY(-4px);
+        transition: all 0.2s ease;
+    }
+
+        .field-error.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+    .field-error-icon {
+        width: 12px;
+        height: 12px;
+        flex-shrink: 0;
+    }
+
+    .form-floating > input.error {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 1px #ef4444 !important;
+    }
+
+    .form-floating > input.success {
+        border-color: #10b981 !important;
+    }
+
+    /* Loading Button States */
+    .btn-loading {
+        position: relative;
+        color: transparent !important;
+    }
+
+        .btn-loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+    @@keyframes spin {
+        0% { transform: translate(-50%, -50%) rotate(0deg); }
+        100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    @@keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@media (max-width: 640px) {
+        .toast-container {
+            left: 12px;
+            right: 12px;
+            top: 12px;
+            max-width: none;
+        }
+
+        .toast {
+            padding: 14px 16px;
+        }
+
+        .login-container {
+            padding: 1.75rem 1.5rem;
+        }
+
+        .page-wrapper {
+            padding: 1rem;
+        }
+    }
+</style>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="page-wrapper">
+    <div class="login-container shadow-sm">
+        <h1>@ViewData["Title"]</h1>
+        <p class="subtitle">Enter your email address to continue</p>
+
+        <form id="loginForm" method="post" novalidate>
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+
+            <a href="#" id="backLink" class="back-link">← Back to email</a>
+
+            <div id="welcomeMessage" class="welcome-message">
+                <h4>Welcome back!</h4>
+                <p>Please enter your password to continue.</p>
+            </div>
+
+            <!-- Email Section -->
+            <div class="form-floating mb-3">
+                <input asp-for="Input.Email" 
+                       class="form-control" 
+                       autocomplete="username" 
+                       placeholder="name@example.com" 
+                       aria-required="true" 
+                       id="emailInput" />
+                <label asp-for="Input.Email">Email address</label>
+                <span asp-validation-for="Input.Email" class="text-danger"></span>
+                <div class="field-error" id="emailError">
+                    <svg class="field-error-icon" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span>Please enter a valid email address.</span>
+                </div>
+            </div>
+
+            <!-- Password Section -->
+            <div id="passwordSection" class="password-section">
+                <div class="form-floating mb-3">
+                    <input asp-for="Input.Password" 
+                           type="password" 
+                           class="form-control" 
+                           autocomplete="current-password" 
+                           placeholder="Password" 
+                           aria-required="true" 
+                           id="passwordInput" />
+                    <label asp-for="Input.Password">Password</label>
+                    <span asp-validation-for="Input.Password" class="text-danger"></span>
+                    <div class="field-error" id="passwordError">
+                        <svg class="field-error-icon" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span>Password is required.</span>
+                    </div>
+                </div>
+            </div>
+
+            <button id="continueBtn" type="button" class="btn btn-primary w-100 mb-2">Continue</button>
+
+            <div class="links">
+                <p><a asp-page="./ForgotPassword">Forgot your password?</a></p>
+                <p><a asp-page="./Register">New here? Create an account</a></p>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "@Model.Configuration["Firebase:ApiKey"]",
+            authDomain: "@Model.Configuration["Firebase:AuthDomain"]",
+            projectId: "@Model.Configuration["Firebase:ProjectId"]",
+            storageBucket: "@Model.Configuration["Firebase:StorageBucket"]"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        // Toast Notification System
+        class ToastManager {
+            constructor() {
+                this.container = document.getElementById('toastContainer');
+                this.toasts = new Set();
+            }
+
+            show(type, title, message, duration = 5000) {
+                const toast = this.createToast(type, title, message);
+                this.container.appendChild(toast);
+                this.toasts.add(toast);
+
+                requestAnimationFrame(() => {
+                    toast.classList.add('show');
+                });
+
+                if (duration > 0) {
+                    setTimeout(() => {
+                        this.dismiss(toast);
+                    }, duration);
+                }
+
+                return toast;
+            }
+
+            createToast(type, title, message) {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                
+                const icon = this.getIcon(type);
+                
+                toast.innerHTML = `
+                    ${icon}
+                    <div class="toast-content">
+                        <div class="toast-title">${title}</div>
+                        <p class="toast-message">${message}</p>
+                    </div>
+                    <button class="toast-close" onclick="toastManager.dismiss(this.parentElement)">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                    </button>
+                `;
+
+                return toast;
+            }
+
+            getIcon(type) {
+                const icons = {
+                    success: '<svg class="toast-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>',
+                    error: '<svg class="toast-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>',
+                    warning: '<svg class="toast-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>',
+                    info: '<svg class="toast-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>'
+                };
+                return icons[type] || icons.info;
+            }
+
+            dismiss(toast) {
+                if (!this.toasts.has(toast)) return;
+                
+                toast.classList.remove('show');
+                toast.classList.add('hide');
+                
+                setTimeout(() => {
+                    if (toast.parentElement) {
+                        toast.parentElement.removeChild(toast);
+                    }
+                    this.toasts.delete(toast);
+                }, 300);
+            }
+
+            success(title, message, duration) {
+                return this.show('success', title, message, duration);
+            }
+
+            error(title, message, duration) {
+                return this.show('error', title, message, duration);
+            }
+
+            warning(title, message, duration) {
+                return this.show('warning', title, message, duration);
+            }
+
+            info(title, message, duration) {
+                return this.show('info', title, message, duration);
+            }
+        }
+
+        // Form Validation System
+        class FormValidator {
+            static showFieldError(inputElement, message) {
+                const errorElement = inputElement.parentElement.querySelector('.field-error');
+                if (errorElement) {
+                    errorElement.querySelector('span').textContent = message;
+                    errorElement.classList.add('show');
+                    inputElement.classList.add('error');
+                    inputElement.setAttribute('aria-invalid', 'true');
+                }
+            }
+
+            static hideFieldError(inputElement) {
+                const errorElement = inputElement.parentElement.querySelector('.field-error');
+                if (errorElement) {
+                    errorElement.classList.remove('show');
+                    inputElement.classList.remove('error');
+                    inputElement.classList.add('success');
+                    inputElement.setAttribute('aria-invalid', 'false');
+                }
+            }
+
+            static validateEmail(email) {
+                const emailRegex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
+                return emailRegex.test(email);
+            }
+
+            static validatePassword(password) {
+                return password && password.length >= 1;
+            }
+        }
+
+        // Initialize
+        const toastManager = new ToastManager();
+
+        let currentStep = 'email';
+        let userType = null;
+
+        const emailInput = document.getElementById('emailInput');
+        const passwordSection = document.getElementById('passwordSection');
+        const passwordInput = document.getElementById('passwordInput');
+        const continueBtn = document.getElementById('continueBtn');
+        const welcomeMessage = document.getElementById('welcomeMessage');
+        const backLink = document.getElementById('backLink');
+
+        // Event listeners
+        continueBtn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            
+            if (currentStep === 'email') {
+                await handleEmailStep();
+            } else if (currentStep === 'password') {
+                await handlePasswordStep();
+            }
+        });
+
+        backLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            resetToEmailStep();
+        });
+
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                continueBtn.click();
+            }
+        });
+
+        // Real-time validation
+        emailInput.addEventListener('input', function() {
+            if (this.value && !FormValidator.validateEmail(this.value)) {
+                FormValidator.showFieldError(this, 'Please enter a valid email address.');
+            } else if (this.value) {
+                FormValidator.hideFieldError(this);
+            }
+        });
+
+        passwordInput.addEventListener('input', function() {
+            if (currentStep === 'password' && !FormValidator.validatePassword(this.value)) {
+                FormValidator.showFieldError(this, 'Password is required.');
+            } else {
+                FormValidator.hideFieldError(this);
+            }
+        });
+
+        async function handleEmailStep() {
+            const email = emailInput.value.trim();
+            
+            if (!email) {
+                FormValidator.showFieldError(emailInput, 'Email address is required.');
+                toastManager.error('Validation Error', 'Please enter your email address.');
+                return;
+            }
+
+            if (!FormValidator.validateEmail(email)) {
+                FormValidator.showFieldError(emailInput, 'Please enter a valid email address.');
+                toastManager.error('Invalid Email', 'Please enter a valid email address.');
+                return;
+            }
+
+            FormValidator.hideFieldError(emailInput);
+
+            continueBtn.disabled = true;
+            continueBtn.classList.add('btn-loading');
+
+            try {
+                const response = await fetch('/Account/Login?handler=CheckUser', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText);
+                }
+
+                const result = await response.json();
+                userType = result.userType;
+
+                if (result.userType === 'erp_no_password') {
+                    toastManager.info('Account Setup Required', 'Redirecting to password setup...');
+                    setTimeout(() => {
+                        window.location.href = result.redirectUrl;
+                    }, 1500);
+                    return;
+                } else if (result.userType === 'erp_with_password' || result.userType === 'online_customer') {
+                    showPasswordSection(result.message || 'Welcome back!');
+                } else if (result.userType === 'new_user') {
+                    toastManager.info('New User', 'Redirecting to registration...');
+                    setTimeout(() => {
+                        window.location.href = result.redirectUrl + `&email=${encodeURIComponent(email)}`;
+                    }, 1500);
+                    return;
+                }
+
+            } catch (error) {
+                toastManager.error('Connection Error', error.message || 'Please check your connection and try again.');
+            } finally {
+                continueBtn.disabled = false;
+                continueBtn.classList.remove('btn-loading');
+            }
+        }
+
+        async function handlePasswordStep() {
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+
+            if (!password) {
+                FormValidator.showFieldError(passwordInput, 'Password is required.');
+                toastManager.error('Validation Error', 'Please enter your password.');
+                return;
+            }
+
+            FormValidator.hideFieldError(passwordInput);
+
+            continueBtn.disabled = true;
+            continueBtn.classList.add('btn-loading');
+
+            try {
+                const response = await fetch('/Account/Login?handler=Authenticate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText);
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    toastManager.success('Welcome Back!', result.message || 'Successfully signed in.');
+                    setTimeout(() => {
+                        window.location.href = result.redirectUrl || '/';
+                    }, 1000);
+                } else {
+                    throw new Error(result.message || 'Authentication failed');
+                }
+
+            } catch (error) {
+                toastManager.error('Authentication Failed', error.message || 'Invalid email or password. Please try again.');
+                FormValidator.showFieldError(passwordInput, 'Please check your password and try again.');
+            } finally {
+                continueBtn.disabled = false;
+                continueBtn.classList.remove('btn-loading');
+            }
+        }
+
+        function showPasswordSection(message) {
+            currentStep = 'password';
+            
+            welcomeMessage.querySelector('h4').textContent = message;
+            
+            passwordSection.classList.add('show');
+            welcomeMessage.classList.add('show');
+            backLink.classList.add('show');
+            continueBtn.textContent = 'Sign In';
+            emailInput.readOnly = true;
+            emailInput.style.backgroundColor = '#f8f9fa';
+            
+            setTimeout(() => {
+                passwordInput.focus();
+            }, 300);
+        }
+
+        function resetToEmailStep() {
+            currentStep = 'email';
+            passwordSection.classList.remove('show');
+            welcomeMessage.classList.remove('show');
+            backLink.classList.remove('show');
+            continueBtn.textContent = 'Continue';
+            emailInput.readOnly = false;
+            emailInput.style.backgroundColor = '';
+            passwordInput.value = '';
+            FormValidator.hideFieldError(passwordInput);
+            emailInput.focus();
+        }
+    </script>
+}

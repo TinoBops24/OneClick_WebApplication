@@ -1,0 +1,183 @@
+/*
+========================================
+CORE SITE STYLES
+========================================
+*/
+html {
+    font-size: 14px;
+    position: relative;
+    min-height: 100%;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+body {
+    /* Remove fixed margin-bottom; the footer will manage its own space */
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+/*
+========================================
+HOMEPAGE STYLES
+========================================
+*/
+.hero-banner {
+    position: relative;
+    background-image: url('https://images.unsplash.com/photo-1556742502-ec7c0e9f34b1?q=80&w=1974&auto=format&fit=crop');
+    background-size: cover;
+    background-position: center;
+    height: 60vh;
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+    margin-bottom: 3rem;
+}
+
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 0.5rem;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 1;
+}
+
+.category-card {
+    text-decoration: none;
+    color: inherit;
+}
+
+    .category-card .card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        border: 1px solid #eee;
+    }
+
+        .category-card .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+.card {
+    border: 1px solid #dee2e6;
+}
+
+.card-img-top {
+    height: 200px;
+    object-fit: cover;
+}
+
+/*
+========================================
+COMPREHENSIVE SITE FOOTER STYLES (V3 - CORRECTED)
+========================================
+*/
+.site-footer {
+    background-color: #212529;
+    color: #adb5bd;
+    padding: 50px 0;
+    font-size: 14px;
+    line-height: 1.8;
+}
+
+    .site-footer h5 {
+        color: #ffffff;
+        font-weight: 600;
+        margin-bottom: 20px;
+        font-size: 16px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .site-footer .footer-logo {
+        max-height: 40px;
+        width: auto;
+        margin-bottom: 15px;
+    }
+
+    .site-footer .footer-tagline {
+        margin-bottom: 20px;
+    }
+
+    .site-footer .footer-links {
+        list-style: none;
+        padding-left: 0;
+    }
+
+        .site-footer .footer-links li {
+            margin-bottom: 8px;
+        }
+
+        .site-footer .footer-links a {
+            color: #adb5bd;
+            text-decoration: none;
+            transition: color 0.2s ease-in-out, padding-left 0.2s ease-in-out;
+        }
+
+            .site-footer .footer-links a:hover {
+                color: #ffffff;
+                padding-left: 4px;
+            }
+
+    .site-footer .newsletter-form .form-control {
+        background-color: #343a40;
+        border-color: #495057;
+        color: #fff;
+        border-radius: 50px 0 0 50px;
+    }
+
+    .site-footer .newsletter-form .btn-primary {
+        border-radius: 0 50px 50px 0;
+    }
+
+    .site-footer .social-icons {
+        list-style: none;
+        padding-left: 0;
+        margin-top: 20px;
+    }
+
+        .site-footer .social-icons li {
+            display: inline-block;
+            margin: 0 10px 0 0;
+        }
+
+        .site-footer .social-icons a {
+            color: #adb5bd;
+            font-size: 1.1rem;
+            display: inline-block;
+            width: 36px;
+            height: 36px;
+            line-height: 36px;
+            text-align: center;
+            border-radius: 50%;
+            border: 1px solid #495057;
+            transition: all 0.3s ease;
+        }
+
+            .site-footer .social-icons a:hover {
+                color: #ffffff;
+                background-color: var(--primary-color, #0088cc);
+                border-color: var(--primary-color, #0088cc);
+                transform: translateY(-2px);
+            }
+
+    .site-footer .footer-bottom {
+        border-top: 1px solid #343a40;
+        padding-top: 20px;
+        margin-top: 30px;
+        font-size: 13px;
+    }

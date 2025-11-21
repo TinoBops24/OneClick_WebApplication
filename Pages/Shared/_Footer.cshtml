@@ -1,0 +1,497 @@
+﻿@inject OneClick_WebApp.Services.FirebaseDbService DbService
+@{
+    // Load branch configuration for footer data
+    var branchConfig = await DbService.GetBranchConfigurationAsync();
+    
+    var companyName = branchConfig?.CompanyName ?? "Commerce Craft Pharmacy";
+    var logoUrl = branchConfig?.LogoUrl ?? "/images/default-logo.png";
+    var footerTagline = branchConfig?.FooterTagline ?? "Your trusted partner for quality products and exceptional service.";
+    var supportEmail = branchConfig?.SupportEmail ?? branchConfig?.Phone;
+    var supportPhone = branchConfig?.SupportPhone ?? branchConfig?.Phone;
+    var facebookUrl = branchConfig?.SocialMedia_Facebook;
+    var instagramUrl = branchConfig?.SocialMedia_Instagram;
+    var twitterUrl = branchConfig?.SocialMedia_Twitter;
+    var linkedinUrl = branchConfig?.SocialMedia_LinkedIn;
+    var contactLocation = branchConfig?.ContactPageLocation;
+}
+
+<footer class="site-footer">
+    <div class="container">
+        <div class="row gy-3">
+            <!-- Brand Section -->
+            <div class="col-lg-4 col-md-6">
+                <div class="footer-brand">
+                    <img src="@logoUrl" alt="@companyName" style="height: 70px;" />
+                    <div class="footer-brand-text">
+                        <h6 class="footer-brand-name">@companyName</h6>
+                        <p class="footer-brand-tagline">Licensed Pharmacy</p>
+                    </div>
+                </div>
+                
+                <p class="footer-description">@footerTagline</p>
+                
+                <!-- Newsletter Signup -->
+                <div class="newsletter-form">
+                    <form id="newsletterForm">
+                        <div class="newsletter-input-group">
+                            <input type="email" class="newsletter-input" placeholder="Enter your email" required>
+                            <button type="submit" class="newsletter-btn">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="col-lg-2 col-md-3 col-6">
+                <h6 class="footer-section-title">Quick Links</h6>
+                <ul class="footer-links">
+                    <li><a href="/" class="footer-link">Home</a></li>
+                    <li><a href="/About" class="footer-link">About Us</a></li>
+                    <li><a href="/Privacy" class="footer-link">Privacy Policy</a></li>
+                </ul>
+            </div>
+
+            <!-- Customer Support -->
+            <div class="col-lg-2 col-md-3 col-6">
+                <h6 class="footer-section-title">Support</h6>
+                <ul class="footer-links">
+                    <li><a href="/Contact" class="footer-link">Contact Us</a></li>
+                    <li><a href="#" class="footer-link">Help Centre</a></li>
+                </ul>
+            </div>
+
+            <!-- Contact Information -->
+            <div class="col-lg-4 col-md-12">
+                <h6 class="footer-section-title">Get In Touch</h6>
+                
+                @if (!string.IsNullOrEmpty(supportPhone))
+                {
+                    <div class="footer-contact-item">
+                        <div class="footer-contact-icon">
+                            <i class="fas fa-phone"></i>
+                        </div>
+                        <div class="footer-contact-text">
+                            <strong>Phone</strong><br>
+                            <a href="tel:@supportPhone" class="footer-contact-link">@supportPhone</a>
+                        </div>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(supportEmail))
+                {
+                    <div class="footer-contact-item">
+                        <div class="footer-contact-icon">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div class="footer-contact-text">
+                            <strong>Email</strong><br>
+                            <a href="mailto:@supportEmail" class="footer-contact-link">@supportEmail</a>
+                        </div>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(contactLocation))
+                {
+                    <div class="footer-contact-item">
+                        <div class="footer-contact-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div class="footer-contact-text">
+                            <strong>Location</strong><br>
+                            <span class="footer-contact-link">@contactLocation</span>
+                        </div>
+                    </div>
+                }
+
+                <!-- Social Media Links -->
+                @if (!string.IsNullOrEmpty(facebookUrl) || !string.IsNullOrEmpty(instagramUrl) || !string.IsNullOrEmpty(twitterUrl) || !string.IsNullOrEmpty(linkedinUrl))
+                {
+                    <div class="footer-social">
+                        @if (!string.IsNullOrEmpty(facebookUrl))
+                        {
+                            <a href="@facebookUrl" target="_blank" class="footer-social-icon" aria-label="Facebook">
+                                <i class="fab fa-facebook-f"></i>
+                            </a>
+                        }
+                        @if (!string.IsNullOrEmpty(instagramUrl))
+                        {
+                            <a href="@instagramUrl" target="_blank" class="footer-social-icon" aria-label="Instagram">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                        }
+                        @if (!string.IsNullOrEmpty(twitterUrl))
+                        {
+                            <a href="@twitterUrl" target="_blank" class="footer-social-icon" aria-label="Twitter">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                        }
+                        @if (!string.IsNullOrEmpty(linkedinUrl))
+                        {
+                            <a href="@linkedinUrl" target="_blank" class="footer-social-icon" aria-label="LinkedIn">
+                                <i class="fab fa-linkedin-in"></i>
+                            </a>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Footer Bottom -->
+        <div class="footer-bottom">
+            <div class="row align-items-center">
+                <div class="col-12 text-center">
+                    <p class="mb-0">&copy; @DateTime.Now.Year One Click Solutions. All Rights Reserved.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<style>
+    /* FOOTER STYLES - DARKER BLUE & MUCH SMALLER */
+    .site-footer {
+        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+        color: white;
+        padding: 1rem 0 0.5rem;
+        margin-top: auto;
+        border-top: 1px solid #e5e7eb;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    }
+
+    .site-footer::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        opacity: 0.7;
+    }
+
+    .footer-brand {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.25rem;
+        gap: 0.75rem;
+    }
+
+    .footer-brand-text {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .footer-brand-name {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: white;
+        margin: 0;
+        line-height: 1.2;
+    }
+
+    .footer-brand-tagline {
+        font-size: 0.85rem;
+        color: rgba(255,255,255,0.8);
+        margin: 0;
+    }
+
+    .footer-section-title {
+        color: white;
+        font-weight: 600;
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        position: relative;
+        padding-bottom: 0.25rem;
+    }
+
+    .footer-section-title::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 20px;
+        height: 2px;
+        background: rgba(255,255,255,0.8);
+        border-radius: 1px;
+    }
+
+    .footer-links {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .footer-links li {
+        margin-bottom: 0.4rem;
+    }
+
+    .footer-link {
+        color: rgba(255,255,255,0.8);
+        text-decoration: none;
+        font-size: 0.8rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        position: relative;
+        display: inline-block;
+        padding: 2px 4px;
+        border-radius: 3px;
+    }
+
+    .footer-link:hover {
+        color: white;
+        background: rgba(255,255,255,0.1);
+        transform: translateX(2px);
+        text-decoration: none;
+    }
+
+    .footer-contact-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        gap: 0.5rem;
+        padding: 4px 8px;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+    }
+
+    .footer-contact-item:hover {
+        background: rgba(255,255,255,0.1);
+    }
+
+    .footer-contact-icon {
+        width: 28px;
+        height: 28px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 0.75rem;
+        flex-shrink: 0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .footer-contact-text {
+        flex: 1;
+    }
+
+    .footer-contact-text strong {
+        color: white;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+
+    .footer-contact-link {
+        color: rgba(255,255,255,0.8);
+        text-decoration: none;
+        transition: color 0.3s ease;
+        font-weight: 500;
+        font-size: 0.8rem;
+    }
+
+    .footer-contact-link:hover {
+        color: white;
+        text-decoration: none;
+    }
+
+    .footer-social {
+        display: flex;
+        gap: 0.6rem;
+        margin-top: 0.75rem;
+    }
+
+    .footer-social-icon {
+        width: 32px;
+        height: 32px;
+        background: rgba(255, 255, 255, 0.2);
+        border: 2px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255,255,255,0.8);
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .footer-social-icon::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .footer-social-icon:hover {
+        color: white;
+        background: rgba(255,255,255,0.3);
+        border-color: white;
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        text-decoration: none;
+    }
+
+    .footer-social-icon:hover::before {
+        left: 100%;
+    }
+
+    .newsletter-form {
+        margin-top: 1.25rem;
+    }
+
+    .newsletter-input-group {
+        display: flex;
+        border-radius: 22px;
+        overflow: hidden;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        background: white;
+        max-width: 300px;
+    }
+
+    .newsletter-input {
+        flex: 1;
+        border: none;
+        padding: 12px 16px;
+        font-size: 0.9rem;
+        background: transparent;
+        color: #333;
+        outline: none;
+    }
+
+    .newsletter-input::placeholder {
+        color: #888;
+        font-size: 0.9rem;
+    }
+
+    .newsletter-btn {
+        background: #1e3a8a;
+        border: none;
+        color: white;
+        padding: 12px 18px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .newsletter-btn:hover {
+        background: #1e40af;
+        transform: scale(1.02);
+    }
+
+    .footer-bottom {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(255,255,255,0.2);
+        text-align: center;
+        color: rgba(255,255,255,0.8);
+        font-size: 0.75rem;
+    }
+
+    .footer-description {
+        color: rgba(255,255,255,0.8);
+        font-size: 0.85rem;
+        line-height: 1.5;
+        margin-bottom: 0.75rem;
+        opacity: 0.9;
+        font-weight: 400;
+    }
+
+    .trust-badge {
+        display: flex;
+        align-items: center;
+        gap: 0.2rem;
+        color: rgba(255,255,255,0.9);
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+
+    /* RESPONSIVE DESIGN */
+    @@media (max-width: 768px) {
+        .site-footer {
+            padding: 1.5rem 0 0.75rem;
+        }
+
+        .footer-brand {
+            flex-direction: column;
+            text-align: center;
+            gap: 0.4rem;
+        }
+
+        .footer-social {
+            justify-content: center;
+        }
+
+        .newsletter-input-group {
+            flex-direction: column;
+            border-radius: 10px;
+            margin: 0 auto;
+        }
+
+        .newsletter-input,
+        .newsletter-btn {
+            border-radius: 0;
+        }
+
+        .newsletter-btn {
+            border-radius: 0 0 10px 10px;
+        }
+
+        .footer-contact-item {
+            justify-content: center;
+            text-align: center;
+        }
+
+        .footer-bottom .row > div {
+            text-align: center !important;
+            margin-bottom: 0.4rem;
+        }
+
+        .trust-badge {
+            font-size: 0.7rem;
+        }
+    }
+</style>
+
+<script>
+    // Newsletter form functionality
+    document.getElementById('newsletterForm')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const email = this.querySelector('.newsletter-input').value;
+        const button = this.querySelector('.newsletter-btn');
+        const originalText = button.innerHTML;
+        
+        // Basic validation
+        if (!email || !email.includes('@@')) {
+            alert('Please enter a valid email address.');
+            return;
+        }
+        
+        // Loading state
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        button.disabled = true;
+        
+        // Simulate API call (replace with actual implementation)
+        setTimeout(() => {
+            alert('Thank you for subscribing to our newsletter!');
+            this.reset();
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }, 1500);
+    });
+</script>

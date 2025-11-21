@@ -1,0 +1,618 @@
+﻿@page
+@model OneClick_WebApp.Pages.Checkout.SuccessModel
+@{
+    ViewData["Title"] = "Order Confirmation";
+}
+
+<style>
+    .success-page {
+        background: #f8fafc;
+        min-height: 100vh;
+        padding: 2rem 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    .success-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .success-header {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        text-align: center;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .success-message {
+        background: #d1fae5;
+        border: 1px solid #10b981;
+        border-radius: 6px;
+        padding: 1rem 1.5rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+        .success-message i {
+            color: #059669;
+            font-size: 1.25rem;
+        }
+
+        .success-message span {
+            color: #065f46;
+            font-weight: 500;
+            font-size: 1.1rem;
+        }
+
+    .order-summary {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 0;
+        margin-bottom: 2rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .order-header {
+        background: #f8fafc;
+        padding: 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+        .order-header h3 {
+            margin: 0;
+            color: #1f2937;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+    .order-info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 2rem;
+        padding: 1.5rem;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .info-item {
+        text-align: center;
+    }
+
+    .info-label {
+        color: #64748b;
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .info-value {
+        color: #1f2937;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    .order-details {
+        padding: 1.5rem;
+    }
+
+        .order-details h4 {
+            color: #1f2937;
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+    .order-items {
+        margin-bottom: 1.5rem;
+    }
+
+    .order-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+    .item-details {
+        flex: 1;
+    }
+
+    .item-name {
+        color: #1f2937;
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+    }
+
+    .item-meta {
+        color: #64748b;
+        font-size: 0.875rem;
+    }
+
+    .item-price {
+        color: #1f2937;
+        font-weight: 600;
+        text-align: right;
+    }
+
+    .order-totals {
+        border-top: 2px solid #e2e8f0;
+        padding-top: 1rem;
+    }
+
+    .total-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+        .total-row:last-child {
+            margin-bottom: 0;
+            padding-top: 0.5rem;
+            border-top: 1px solid #f1f5f9;
+            font-weight: 600;
+            font-size: 1.125rem;
+        }
+
+    .addresses-section {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 0;
+        margin-bottom: 2rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .addresses-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+    }
+
+    .address-block {
+        padding: 1.5rem;
+    }
+
+        .address-block:first-child {
+            border-right: 1px solid #e2e8f0;
+        }
+
+    .address-title {
+        color: #374151;
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .address-details {
+        color: #6b7280;
+        line-height: 1.6;
+    }
+
+        .address-details div {
+            margin-bottom: 0.25rem;
+        }
+
+    .next-steps {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+        .next-steps h4 {
+            color: #1f2937;
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+    .step-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .step-item {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+        background: #f8fafc;
+        border-radius: 6px;
+        border-left: 3px solid #1e40af;
+    }
+
+        .step-item:last-child {
+            margin-bottom: 0;
+        }
+
+    .step-number {
+        background: #1e40af;
+        color: white;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin-right: 0.75rem;
+        flex-shrink: 0;
+    }
+
+    .step-content {
+        flex: 1;
+    }
+
+    .step-title {
+        color: #1f2937;
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+    }
+
+    .step-description {
+        color: #64748b;
+        font-size: 0.875rem;
+        line-height: 1.4;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .btn-primary {
+        background: #1e40af;
+        color: white;
+        border: 1px solid #1e40af;
+        padding: 0.75rem 1.5rem;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        flex: 1;
+        text-align: center;
+    }
+
+        .btn-primary:hover {
+            background: #1e3a8a;
+            border-color: #1e3a8a;
+            color: white;
+            text-decoration: none;
+        }
+
+    .btn-secondary {
+        background: white;
+        color: #374151;
+        border: 1px solid #d1d5db;
+        padding: 0.75rem 1.5rem;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        flex: 1;
+        text-align: center;
+    }
+
+        .btn-secondary:hover {
+            background: #f9fafb;
+            border-color: #9ca3af;
+            color: #374151;
+            text-decoration: none;
+        }
+
+    .whatsapp-btn {
+        background: #25d366;
+        color: white;
+        border: 1px solid #25d366;
+        padding: 1rem 1.5rem;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        width: 100%;
+        text-align: center;
+        display: block;
+        margin-bottom: 1rem;
+    }
+
+        .whatsapp-btn:hover {
+            background: #20b358;
+            border-color: #20b358;
+            color: white;
+            text-decoration: none;
+        }
+
+    .copy-btn {
+        background: #f3f4f6;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        color: #374151;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-left: 0.5rem;
+    }
+
+        .copy-btn:hover {
+            background: #e5e7eb;
+            border-color: #9ca3af;
+        }
+
+    @@media (max-width: 768px) {
+        .success-page
+
+    {
+        padding: 1rem 0;
+    }
+
+    .order-info-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .addresses-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .address-block:first-child {
+        border-right: none;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    }
+</style>
+
+<div class="success-page">
+    <div class="container">
+        <div class="success-container">
+            <!-- Success Message -->
+            <div class="success-message">
+                <i class="fas fa-check-circle"></i>
+                <span>Thank You. Your Order has been received.</span>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="order-summary">
+                <div class="order-header">
+                    <h3>Order Summary</h3>
+                </div>
+
+                <!-- Order Information Grid -->
+                <div class="order-info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Order Number</div>
+                        <div class="info-value">
+                            @Model.OrderId
+                            <button class="copy-btn" onclick="copyOrderId()">Copy</button>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Date</div>
+                        <div class="info-value">@DateTime.Now.ToString("MMMM dd, yyyy")</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Email</div>
+                        <div class="info-value">@Model.CustomerEmail</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Total</div>
+                        <div class="info-value">@Model.Total.ToString("C", new System.Globalization.CultureInfo("en-ZA"))</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Payment Method</div>
+                        <div class="info-value">Cash on Delivery</div>
+                    </div>
+                </div>
+
+                <!-- Order Details -->
+                <div class="order-details">
+                    <h4>Your Order</h4>
+
+                    <div class="order-items">
+                        @if (Model.Order?.StockMovements != null && Model.Order.StockMovements.Any())
+                        {
+                            @foreach (var item in Model.Order.StockMovements)
+                            {
+                                <div class="order-item">
+                                    <div class="item-details">
+                                        <div class="item-name">@(item.Product?.Name ?? "Product") x@(item.Quantity)</div>
+                                        <div class="item-meta">@(item.Product?.Category?.Name ?? "Pharmacy Product")</div>
+                                    </div>
+                                    <div class="item-price">@item.LineTotal.ToString("C", new System.Globalization.CultureInfo("en-ZA"))</div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="order-item">
+                                <div class="item-details">
+                                    <div class="item-name">Order items will be confirmed via WhatsApp</div>
+                                    <div class="item-meta">Pharmacy Products</div>
+                                </div>
+                                <div class="item-price">@Model.Total.ToString("C", new System.Globalization.CultureInfo("en-ZA"))</div>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="order-totals">
+                        <div class="total-row">
+                            <span>Subtotal</span>
+                            <span>@Model.Subtotal.ToString("C", new System.Globalization.CultureInfo("en-ZA"))</span>
+                        </div>
+                        <div class="total-row">
+                            <span>Shipping</span>
+                            <span>@(Model.DeliveryFee == 0 ? "Free Shipping" : Model.DeliveryFee.ToString("C", new System.Globalization.CultureInfo("en-ZA")))</span>
+                        </div>
+                        <div class="total-row">
+                            <span>Total</span>
+                            <span>@Model.Total.ToString("C", new System.Globalization.CultureInfo("en-ZA"))</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Billing and Shipping Addresses -->
+            <div class="addresses-section">
+                <div class="addresses-grid">
+                    <div class="address-block">
+                        <h4 class="address-title">Billing Address</h4>
+                        <div class="address-details">
+                            <div>@Model.CustomerName</div>
+                            @if (Model.Order != null)
+                            {
+                                <div>@(Model.Order.ClientAddress ?? "Address provided via WhatsApp")</div>
+                                @if (!string.IsNullOrEmpty(Model.Order.Phone))
+                                {
+                                    <div>@Model.Order.Phone</div>
+                                }
+                            }
+                            else
+                            {
+                                <div>Address details via WhatsApp</div>
+                            }
+                            <div>@Model.CustomerEmail</div>
+                        </div>
+                    </div>
+                    <div class="address-block">
+                        <h4 class="address-title">Shipping Address</h4>
+                        <div class="address-details">
+                            @if (Model.Order != null)
+                            {
+                                @if (Model.Order.DeliveryType == OneClick_WebApp.Models.Enums.DeliveryType.Pickup)
+                                {
+                                    <div><strong>Store Pickup</strong></div>
+                                    <div>Commerce Craft Pharmacy</div>
+                                    <div>Cape Town, South Africa</div>
+                                    <div>Contact via WhatsApp for pickup details</div>
+                                }
+                                else
+                                {
+                                    <div>@(Model.Order.ClientName ?? Model.CustomerName)</div>
+                                    <div>@(Model.Order.DeliveryAddress ?? Model.Order.ClientAddress ?? "Delivery address via WhatsApp")</div>
+                                    @if (!string.IsNullOrEmpty(Model.Order.ClientPhoneNumber))
+                                    {
+                                        <div>@Model.Order.ClientPhoneNumber</div>
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                <div>@Model.CustomerName</div>
+                                <div>Delivery details via WhatsApp</div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Next Steps -->
+            <div class="next-steps">
+                <h4>What happens next?</h4>
+                <ul class="step-list">
+                    <li class="step-item">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <div class="step-title">Send WhatsApp Message</div>
+                            <div class="step-description">Click the button below to send your order details via WhatsApp for confirmation</div>
+                        </div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <div class="step-title">Order Confirmation</div>
+                            <div class="step-description">We'll confirm your order and provide payment details</div>
+                        </div>
+                    </li>
+                    <li class="step-item">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <div class="step-title">Prepare & Deliver</div>
+                            <div class="step-description">Your products will be prepared and delivered as requested</div>
+                        </div>
+                    </li>
+                </ul>
+
+                <!-- Action Buttons -->
+                @if (!string.IsNullOrEmpty(Model.WhatsAppUrl))
+                {
+                    <a href="@Model.WhatsAppUrl" class="whatsapp-btn" target="_blank">
+                        <i class="fab fa-whatsapp me-2"></i>
+                        Complete Order on WhatsApp
+                    </a>
+                }
+
+                <div class="action-buttons">
+                    <a href="/Products/Index" class="btn-secondary">
+                        <i class="fas fa-shopping-bag me-2"></i>
+                        Continue Shopping
+                    </a>
+                    <a href="/Account/OrderHistory" class="btn-primary">
+                        <i class="fas fa-clock-rotate-left me-2"></i>
+                        View Order History
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function copyOrderId() {
+        const orderIdText = '@Model.OrderId';
+        navigator.clipboard.writeText(orderIdText).then(() => {
+            const btn = document.querySelector('.copy-btn');
+            const originalText = btn.textContent;
+            btn.textContent = 'Copied!';
+            btn.style.background = '#d1fae5';
+            btn.style.borderColor = '#10b981';
+            btn.style.color = '#065f46';
+
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.background = '#f3f4f6';
+                btn.style.borderColor = '#d1d5db';
+                btn.style.color = '#374151';
+            }, 2000);
+        }).catch(() => {
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = orderIdText;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+        });
+    }
+</script>

@@ -1,0 +1,1131 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Admin Panel</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    @RenderSection("Styles", required: false)
+
+    <!-- Admin-specific styles -->
+    <style>
+        :root {
+            --admin-primary: #0d6efd;
+            --admin-secondary: #6c757d;
+            --admin-success: #198754;
+            --admin-danger: #dc3545;
+            --admin-warning: #ffc107;
+            --admin-info: #0dcaf0;
+            --admin-dark: #212529;
+            --admin-sidebar-bg: #343a40;
+            --admin-sidebar-text: #fff;
+            --sidebar-width: 250px;
+        }
+
+        .admin-wrapper {
+            min-height: 100vh;
+            display: flex;
+            position: relative;
+        }
+
+        .admin-sidebar {
+            width: var(--sidebar-width);
+            background: var(--admin-sidebar-bg);
+            color: var(--admin-sidebar-text);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1050;
+            transition: transform 0.3s ease;
+            left: 0;
+            top: 0;
+        }
+
+        .admin-content {
+            flex: 1;
+            background: #f8f9fa;
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+            margin-left: var(--sidebar-width);
+        }
+
+        .admin-header {
+            background: white;
+            border-bottom: 1px solid #dee2e6;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .sidebar-toggle {
+            display: none;
+            background: var(--admin-primary);
+            border: none;
+            color: white;
+            padding: .5rem;
+            border-radius: 4px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: background-color .3s ease;
+        }
+
+            .sidebar-toggle:hover {
+                background: #0056b3;
+            }
+
+        .admin-sidebar .navbar-brand {
+            color: var(--admin-sidebar-text);
+            padding: 1.5rem 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-close {
+            background: none;
+            border: none;
+            color: var(--admin-sidebar-text);
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: none;
+            padding: 0;
+        }
+
+        .admin-nav {
+            padding: 1rem 0;
+        }
+
+            .admin-nav .nav-link {
+                color: rgba(255,255,255,0.8);
+                padding: .75rem 1.5rem;
+                border-radius: 0;
+                transition: all .3s ease;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                text-decoration: none;
+                position: relative;
+            }
+
+                .admin-nav .nav-link:hover {
+                    color: white;
+                    background: rgba(255,255,255,0.1);
+                }
+
+                .admin-nav .nav-link.active {
+                    color: white;
+                    background: var(--admin-primary);
+                    border-left: 3px solid #fff;
+                }
+
+                .admin-nav .nav-link i {
+                    width: 20px;
+                    margin-right: .75rem;
+                }
+
+        .nav-badge {
+            min-width: 18px;
+            height: 18px;
+            border-radius: 9px;
+            background: #dc3545;
+            color: white;
+            font-size: .7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            animation: pulse-badge 2s infinite;
+        }
+
+        @@keyframes pulse-badge {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .admin-main {
+            padding: 2rem;
+        }
+
+        .stats-card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform .2s ease;
+        }
+
+            .stats-card:hover {
+                transform: translateY(-2px);
+            }
+
+        .stats-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1040;
+            opacity: 0;
+            transition: opacity .3s ease;
+        }
+
+            .sidebar-overlay.show {
+                display: block;
+                opacity: 1;
+            }
+
+        @@media (max-width: 992px) {
+            .admin-sidebar {
+                transform: translateX(-100%);
+            }
+
+            .admin-content {
+                margin-left: 0;
+            }
+
+            .sidebar-toggle {
+                display: inline-block;
+            }
+
+            .sidebar-close {
+                display: inline-block;
+            }
+
+            .admin-sidebar.show {
+                transform: translateX(0);
+            }
+
+            .admin-main {
+                padding: 1rem;
+            }
+
+            .admin-header {
+                padding: 1rem;
+            }
+        }
+
+        @@media (max-width: 576px) {
+            .admin-sidebar {
+                width: 280px;
+            }
+
+            .admin-main {
+                padding: .5rem;
+            }
+
+            .stats-card .card-body {
+                padding: 1rem .75rem;
+            }
+        }
+
+        .stats-card-hover {
+            transition: all .3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .stats-card-hover:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            }
+
+            .stats-card-hover::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+                transition: left .5s;
+            }
+
+            .stats-card-hover:hover::before {
+                left: 100%;
+            }
+
+        .progress-sm {
+            height: 6px;
+        }
+
+        .revenue-progress {
+            transition: width 2s ease-in-out;
+        }
+
+        .counter {
+            display: inline-block;
+        }
+
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+
+        @@keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(255, 193, 7, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+            }
+        }
+
+        .message-bounce {
+            animation: bounce 1s infinite;
+        }
+
+        @@keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+
+            40% {
+                transform: translateY(-5px);
+            }
+
+            60% {
+                transform: translateY(-3px);
+            }
+        }
+
+        .user-avatars {
+            display: flex;
+            align-items: center;
+        }
+
+        .avatar-sm {
+            position: relative;
+            z-index: 1;
+            border: 2px solid white;
+            border-radius: 50%;
+        }
+
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .admin-nav .nav-link.active {
+            position: relative;
+            background: linear-gradient(135deg, var(--admin-primary) 0%, #0056b3 100%);
+            color: white;
+            border-left: 3px solid #fff;
+            box-shadow: 0 2px 10px rgba(13,110,253,.3);
+        }
+
+            .admin-nav .nav-link.active::after {
+                content: '';
+                position: absolute;
+                right: 0;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 0;
+                height: 0;
+                border-top: 8px solid transparent;
+                border-bottom: 8px solid transparent;
+                border-right: 8px solid #f8f9fa;
+            }
+
+        .refresh-spin {
+            animation: spin 1s linear infinite;
+        }
+
+        @@keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .recent-activity-item {
+            transition: all .2s ease;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 5px 0;
+        }
+
+            .recent-activity-item:hover {
+                background: rgba(13,110,253,0.1);
+                transform: translateX(5px);
+            }
+
+        .btn-group-floating {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+        }
+
+        .floating-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: all .3s ease;
+        }
+
+            .floating-btn:hover {
+                transform: scale(1.1);
+            }
+
+        @@media (max-width: 768px) {
+            .stats-card-hover:hover {
+                transform: none;
+            }
+
+            .quick-actions .btn {
+                font-size: .8rem;
+                padding: .25rem .5rem;
+            }
+        }
+
+        /* =======================
+                   Global Loading Overlay
+                   ======================= */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity .3s ease, visibility .3s ease;
+        }
+
+            .loading-overlay.active {
+                opacity: 1;
+                visibility: visible;
+            }
+
+        .loading-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .loading-text {
+            font-size: 1.1rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .loading-spinner.hourglass {
+            position: relative;
+            width: 80px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .loading-spinner.hourglass::before {
+                content: '';
+                position: absolute;
+                width: 60px;
+                height: 80px;
+                border: 4px solid #007bff;
+                border-radius: 8px;
+                clip-path: polygon(0% 0%, 100% 0%, 100% 15%, 55% 50%, 100% 85%, 100% 100%, 0% 100%, 0% 85%, 45% 50%, 0% 15%);
+                animation: hourglass-rotate 3s ease-in-out infinite;
+            }
+
+            .loading-spinner.hourglass::after {
+                content: '';
+                position: absolute;
+                top: 8px;
+                width: 40px;
+                height: 0px;
+                background: #007bff;
+                border-radius: 0 0 20px 20px;
+                animation: sand-top 3s ease-in-out infinite;
+            }
+
+        @@keyframes hourglass-rotate {
+            0%, 40% {
+                transform: rotate(0deg);
+            }
+
+            50%, 90% {
+                transform: rotate(180deg);
+            }
+
+            100% {
+                transform: rotate(180deg);
+            }
+        }
+
+        @@keyframes sand-top {
+            0% {
+                height: 30px;
+                opacity: 1;
+            }
+
+            40% {
+                height: 0;
+                opacity: 1;
+            }
+
+            50% {
+                height: 0;
+                opacity: 0;
+            }
+
+            51% {
+                height: 30px;
+                opacity: 0;
+            }
+
+            60% {
+                height: 30px;
+                opacity: 1;
+            }
+
+            100% {
+                height: 0;
+                opacity: 1;
+            }
+        }
+
+        .loading-spinner.hourglass-v2 {
+            position: relative;
+            width: 80px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .loading-spinner.hourglass-v2::before {
+                content: '';
+                position: absolute;
+                width: 0;
+                height: 0;
+                border-style: solid;
+                border-width: 35px 30px 0 30px;
+                border-color: #007bff transparent transparent transparent;
+                top: 10px;
+                animation: hourglass-flip 3s ease-in-out infinite;
+            }
+
+            .loading-spinner.hourglass-v2::after {
+                content: '';
+                position: absolute;
+                width: 0;
+                height: 0;
+                border-style: solid;
+                border-width: 0 30px 35px 30px;
+                border-color: transparent transparent #007bff transparent;
+                bottom: 10px;
+                animation: hourglass-flip 3s ease-in-out infinite;
+            }
+
+        @@keyframes hourglass-flip {
+            0%, 45% {
+                transform: rotate(0deg);
+            }
+
+            50%, 95% {
+                transform: rotate(180deg);
+            }
+
+            100% {
+                transform: rotate(180deg);
+            }
+        }
+
+        .loading-spinner.hourglass-best {
+            position: relative;
+            width: 80px;
+            height: 100px;
+            animation: hourglass-full-rotate 4s ease-in-out infinite;
+        }
+
+            .loading-spinner.hourglass-best::before {
+                content: '';
+                position: absolute;
+                top: 5px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 50px;
+                height: 35px;
+                background: transparent;
+                border: 4px solid #007bff;
+                border-bottom: none;
+                border-radius: 25px 25px 0 0;
+                box-shadow: inset 0 -10px 0 0 #007bff;
+                animation: sand-drain-top 4s ease-in-out infinite;
+            }
+
+            .loading-spinner.hourglass-best::after {
+                content: '';
+                position: absolute;
+                bottom: 5px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 50px;
+                height: 35px;
+                background: transparent;
+                border: 4px solid #007bff;
+                border-top: none;
+                border-radius: 0 0 25px 25px;
+                box-shadow: inset 0 10px 0 0 transparent;
+                animation: sand-fill-bottom 4s ease-in-out infinite;
+            }
+
+        @@keyframes hourglass-full-rotate {
+            0%, 45% {
+                transform: rotate(0deg);
+            }
+
+            55%, 95% {
+                transform: rotate(180deg);
+            }
+
+            100% {
+                transform: rotate(180deg);
+            }
+        }
+
+        @@keyframes sand-drain-top {
+            0% {
+                box-shadow: inset 0 -30px 0 0 #007bff;
+            }
+
+            45% {
+                box-shadow: inset 0 0 0 0 #007bff;
+            }
+
+            55% {
+                box-shadow: inset 0 0 0 0 #007bff;
+            }
+
+            100% {
+                box-shadow: inset 0 -30px 0 0 #007bff;
+            }
+        }
+
+        @@keyframes sand-fill-bottom {
+            0% {
+                box-shadow: inset 0 10px 0 0 transparent;
+            }
+
+            45% {
+                box-shadow: inset 0 40px 0 0 #007bff;
+            }
+
+            55% {
+                box-shadow: inset 0 40px 0 0 #007bff;
+            }
+
+            100% {
+                box-shadow: inset 0 10px 0 0 transparent;
+            }
+        }
+
+        .loading-spinner.hourglass-best {
+            background: linear-gradient(to right, transparent 35%, #007bff 35%, #007bff 37%, transparent 37%), linear-gradient(to right, transparent 63%, #007bff 63%, #007bff 65%, transparent 65%);
+            background-position: center;
+            background-size: 100% 20px;
+            background-repeat: no-repeat;
+        }
+
+        .loading-spinner.cart {
+            width: 100px;
+            height: 80px;
+            position: relative;
+            animation: cart-bounce 2s ease-in-out infinite;
+        }
+
+            .loading-spinner.cart::before {
+                content: '🛒';
+                font-size: 60px;
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%,-50%);
+            }
+
+        @@keyframes cart-bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .loading-dots {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+            .loading-dots span {
+                width: 10px;
+                height: 10px;
+                background: #007bff;
+                border-radius: 50%;
+                animation: dot-bounce 1.4s ease-in-out infinite;
+            }
+
+                .loading-dots span:nth-child(1) {
+                    animation-delay: 0s;
+                }
+
+                .loading-dots span:nth-child(2) {
+                    animation-delay: .2s;
+                }
+
+                .loading-dots span:nth-child(3) {
+                    animation-delay: .4s;
+                }
+
+        @@keyframes dot-bounce {
+            0%, 80%, 100% {
+                transform: scale(.8);
+                opacity: .5;
+            }
+
+            40% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+        }
+
+        .inline-loader {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .spinner-small {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,123,255,.3);
+            border-top-color: #007bff;
+            border-radius: 50%;
+            animation: spin .8s linear infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar overlay for mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <div class="admin-wrapper">
+        <!-- Admin Sidebar -->
+        <nav class="admin-sidebar" id="adminSidebar">
+            <div class="navbar-brand">
+                <div>
+                    <i class="bi bi-shield-lock me-2"></i>
+                    Admin Panel
+                </div>
+                <button class="sidebar-close" id="sidebarClose">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <ul class="nav flex-column admin-nav">
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/Admin/Dashboard" ? "active" : "")"
+                       href="/Admin/Dashboard">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-speedometer2"></i>
+                            Dashboard
+                        </div>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/Admin/Index" ? "active" : "")"
+                       href="/Admin/Index">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-palette"></i>
+                            Site Configuration
+                        </div>
+                    </a>
+                </li>
+
+                <li class="nav-item mt-3">
+                    <div class="px-3 py-2">
+                        <small class="text-uppercase text-muted fw-bold">Management</small>
+                    </div>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/Admin/Orders" ? "active" : "")"
+                       href="/Admin/Orders">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-cart-check"></i>
+                            Orders
+                        </div>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/Admin/Users" ? "active" : "")"
+                       href="/Admin/Users">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-people"></i>
+                            Users
+                        </div>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/Admin/Messages" ? "active" : "")"
+                       href="/Admin/Messages"
+                       id="messagesNavLink">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-envelope"></i>
+                            Messages
+                        </div>
+                        <span id="messagesBadge" class="nav-badge" style="display: none;">0</span>
+                    </a>
+                </li>
+
+                <!-- REPORTS SECTION -->
+                <li class="nav-item mt-3">
+                    <div class="px-3 py-2">
+                        <small class="text-uppercase text-muted fw-bold">
+                            <i class="bi bi-bar-chart-fill me-1"></i>Reports
+                        </small>
+                    </div>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString()?.Contains("/Admin/Reports/OrderTrends") == true ? "active" : "")"
+                       href="/Admin/Reports/OrderTrends">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-graph-up-arrow"></i>
+                            Order Trends
+                        </div>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString()?.Contains("/Admin/Reports/TopProducts") == true ? "active" : "")"
+                       href="/Admin/Reports/TopProducts">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-trophy"></i>
+                            Top Products
+                        </div>
+                    </a>
+                </li>
+
+                <li class="nav-item mt-3">
+                    <div class="px-3 py-2">
+                        <small class="text-uppercase text-muted fw-bold">Site</small>
+                    </div>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="/" target="_blank">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-box-arrow-up-right"></i>
+                            View Website
+                        </div>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/Account/Logout">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-box-arrow-right"></i>
+                            Logout
+                        </div>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Admin Content -->
+        <div class="admin-content">
+            <!-- Admin Header -->
+            <header class="admin-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <button class="sidebar-toggle me-3" id="sidebarToggle">
+                            <i class="bi bi-list"></i>
+                        </button>
+                        <div>
+                            <h4 class="mb-0">@ViewData["Title"]</h4>
+                            @if (!string.IsNullOrEmpty(ViewData["Subtitle"]?.ToString()))
+                            {
+                                <small class="text-muted">@ViewData["Subtitle"]</small>
+                            }
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <span class="me-3 d-none d-md-inline">
+                            <i class="bi bi-person-circle me-1"></i>
+                            @User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value
+                        </span>
+                        <a href="/" class="btn btn-outline-primary btn-sm" target="_blank">
+                            <i class="bi bi-box-arrow-up-right me-1"></i>
+                            <span class="d-none d-sm-inline">View Site</span>
+                        </a>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content Area -->
+            <main class="admin-main">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <!-- Admin sidebar toggle script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarClose = document.getElementById('sidebarClose');
+            const sidebar = document.getElementById('adminSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+
+            function showSidebar() {
+                sidebar.classList.add('show');
+                overlay.classList.add('show');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function hideSidebar() {
+                sidebar.classList.remove('show');
+                overlay.classList.remove('show');
+                document.body.style.overflow = '';
+            }
+
+            sidebarToggle?.addEventListener('click', showSidebar);
+            sidebarClose?.addEventListener('click', hideSidebar);
+            overlay?.addEventListener('click', hideSidebar);
+
+            const navLinks = sidebar.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function () {
+                    if (window.innerWidth <= 992) {
+                        setTimeout(hideSidebar, 100);
+                    }
+                });
+            });
+
+            window.addEventListener('resize', function () {
+                if (window.innerWidth > 992) {
+                    hideSidebar();
+                }
+            });
+
+            // Load messages badge count
+            loadMessagesBadge();
+        });
+
+        async function loadMessagesBadge() {
+            try {
+                const response = await fetch('/Admin/Dashboard?handler=GetUnreadMessagesCount', {
+                    method: 'GET',
+                    headers: {
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const badge = document.getElementById('messagesBadge');
+
+                    if (data.count > 0) {
+                        badge.textContent = data.count > 99 ? '99+' : data.count;
+                        badge.style.display = 'flex';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+            } catch (error) {
+                console.log('Could not load messages count:', error);
+            }
+        }
+        setInterval(loadMessagesBadge, 30000);
+    </script>
+
+    <!-- Global Loading Overlay Script -->
+    <script>
+        // Loading Manager
+        const LoadingManager = {
+            overlay: null,
+
+            init() {
+                this.createOverlay();
+                this.attachNavigationListeners();
+            },
+
+            createOverlay() {
+                this.overlay = document.createElement('div');
+                this.overlay.id = 'loading-overlay';
+                // IMPORTANT: add the style class so CSS applies
+                this.overlay.className = 'loading-overlay';
+                this.overlay.innerHTML = `
+                    <div class="loading-content">
+                        <div class="loading-spinner" id="loading-spinner"></div>
+                        <div class="loading-text" id="loading-text">Loading...</div>
+                    </div>
+                `;
+                document.body.appendChild(this.overlay);
+            },
+
+            attachNavigationListeners() {
+                // Show loading on actual page navigation clicks
+                document.addEventListener('click', (e) => {
+                    const link = e.target.closest('a');
+                    if (!link) return;
+
+                    const href = link.getAttribute('href');
+
+                    // 1. Dropdown toggles
+                    if (link.classList.contains('dropdown-toggle')) return;
+                    if (link.hasAttribute('data-bs-toggle')) return;
+
+                    // 2. Fragment links (same page anchors)
+                    if (href && href.startsWith('#')) return;
+
+                    // 3. External links
+                    if (href && (href.startsWith('http://') || href.startsWith('https://'))) {
+                        if (link.target === '_blank') return;
+                    }
+
+                    // 4. JavaScript void links
+                    if (href === 'javascript:void(0)' || href === 'javascript:;') return;
+
+                    // 5. Links with data-no-loading attribute
+                    if (link.hasAttribute('data-no-loading')) return;
+
+                    // 6. Modal triggers
+                    if (link.hasAttribute('data-bs-target')) return;
+
+                    // 7. Empty or null href
+                    if (!href || href === '') return;
+
+                    // SHOW LOADING for actual page navigations
+                    this.showHourglass('Loading page...');
+                });
+
+                // Show loading on form submissions (except AJAX forms)
+                document.addEventListener('submit', (e) => {
+                    const form = e.target;
+
+                    // Don't show loading for AJAX forms
+                    if (form.hasAttribute('data-ajax')) return;
+                    if (form.classList.contains('ajax-form')) return;
+
+                    // Don't show for forms with data-no-loading
+                    if (form.hasAttribute('data-no-loading')) return;
+
+                    this.showHourglass('Processing...');
+                });
+
+                // Hide loading when page fully loads
+                window.addEventListener('load', () => {
+                    this.hide();
+                });
+
+                // Hide loading if page navigation is cancelled
+                window.addEventListener('pageshow', () => {
+                    this.hide();
+                });
+            },
+
+            showHourglass(message = 'Loading...') {
+                if (this.overlay) {
+                    const spinner = this.overlay.querySelector('#loading-spinner');
+                    const text = this.overlay.querySelector('#loading-text');
+
+                    // Use the BEST hourglass animation
+                    spinner.className = 'loading-spinner hourglass-best';
+                    text.textContent = message;
+
+                    this.overlay.classList.add('active');
+                }
+            },
+
+            showCart(message = 'Processing order...') {
+                if (this.overlay) {
+                    const spinner = this.overlay.querySelector('#loading-spinner');
+                    const text = this.overlay.querySelector('#loading-text');
+
+                    // Set cart animation
+                    spinner.className = 'loading-spinner cart';
+                    text.textContent = message;
+
+                    this.overlay.classList.add('active');
+                }
+            },
+
+            hide() {
+                if (this.overlay) {
+                    this.overlay.classList.remove('active');
+                }
+            }
+        };
+
+        // Initialise when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => LoadingManager.init());
+        } else {
+            LoadingManager.init();
+        }
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

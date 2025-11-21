@@ -1,0 +1,106 @@
+﻿/* Core styles for OneClick E-commerce layout */
+/* Docs: https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification */
+
+/* --- Branding --- */
+a.navbar-brand {
+    white-space: normal;
+    text-align: center;
+    word-break: break-word;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+/* --- Links --- */
+a {
+    color: #0077cc;
+    text-decoration: none;
+}
+
+    a:hover {
+        color: #005fa3;
+        text-decoration: underline;
+    }
+
+/* --- Buttons --- */
+.btn-primary {
+    color: #fff;
+    background-color: #1b6ec2;
+    border-color: #1861ac;
+}
+
+    .btn-primary:hover {
+        background-color: #155a9c;
+        border-color: #124e87;
+    }
+
+/* --- Nav Pills --- */
+.nav-pills .nav-link.active,
+.nav-pills .show > .nav-link {
+    color: #fff;
+    background-color: #1b6ec2;
+    border-color: #1861ac;
+}
+
+/* --- Borders --- */
+.border-top {
+    border-top: 1px solid #e5e5e5;
+}
+
+.border-bottom {
+    border-bottom: 1px solid #e5e5e5;
+}
+
+/* --- Shadows --- */
+.box-shadow {
+    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.05);
+}
+
+/* --- Cookie Policy --- */
+button.accept-policy {
+    font-size: 1rem;
+    line-height: inherit;
+    padding: 0.5rem 1rem;
+    background-color: #28a745;
+    border: none;
+    color: white;
+    border-radius: 4px;
+}
+
+    button.accept-policy:hover {
+        background-color: #218838;
+    }
+
+/* --- Footer --- */
+.footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    white-space: nowrap;
+    line-height: 60px;
+    background-color: #f8f9fa;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #6c757d;
+    border-top: 1px solid #dee2e6;
+}
+
+/* --- Cart Badge --- */
+.cart-badge {
+    background-color: red;
+    color: white;
+    font-size: 0.75rem;
+    padding: 0.25em 0.5em;
+    border-radius: 999px;
+    position: absolute;
+    top: 0;
+    right: -10px;
+}
+
+/* --- Utility Classes --- */
+.text-center {
+    text-align: center;
+}
+
+.mt-3 {
+    margin-top: 1rem;
+}

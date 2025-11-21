@@ -1,0 +1,535 @@
+﻿@page
+@model OneClick_WebApp.Pages.ContactModel
+@{
+    ViewData["Title"] = "Contact Us";
+}
+
+<style>
+    .contact-hero {
+        background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+        color: white;
+        padding: 5rem 0;
+        margin-bottom: 3rem;
+    }
+
+        .contact-hero h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .contact-hero p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+        }
+
+    .contact-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid #e2e8f0;
+        height: 100%;
+        transition: all 0.3s ease;
+    }
+
+        .contact-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+
+    .contact-icon {
+        width: 70px;
+        height: 70px;
+        background: #e0f2fe;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+    }
+
+        .contact-icon i {
+            font-size: 2rem;
+            color: #1e40af;
+        }
+
+    .contact-card h5 {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 1rem;
+    }
+
+    .contact-card p {
+        color: #64748b;
+        margin-bottom: 1rem;
+    }
+
+    .contact-card .btn {
+        margin-top: auto;
+    }
+
+    .form-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+    }
+
+    .form-header {
+        background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+        color: white;
+        padding: 1.5rem 2rem;
+    }
+
+        .form-header h4 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+
+        .form-header p {
+            margin: 0.5rem 0 0;
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+
+    .form-body {
+        padding: 2rem;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 0.75rem;
+        transition: all 0.3s ease;
+    }
+
+        .form-control:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+    .btn-submit {
+        background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+        border: none;
+        color: white;
+        padding: 0.875rem 2rem;
+        border-radius: 8px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        transition: all 0.3s ease;
+    }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(30, 64, 175, 0.3);
+        }
+
+    .map-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+
+    .map-header {
+        background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+        color: white;
+        padding: 1rem 1.5rem;
+    }
+
+        .map-header h4 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+    .tips-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid #e2e8f0;
+        padding: 1.5rem;
+    }
+
+        .tips-card h5 {
+            color: #1e293b;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .tips-card ul li {
+            padding: 0.5rem 0;
+            color: #64748b;
+        }
+
+            .tips-card ul li i {
+                color: #059669;
+            }
+
+    .location-status {
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .location-success {
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+    }
+
+    .location-fallback {
+        background: #fef3c7;
+        color: #92400e;
+        border: 1px solid #fed7aa;
+    }
+</style>
+
+<!-- Hero Section -->
+<div class="contact-hero">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1>Get in Touch</h1>
+                <p>We're here to help and answer any questions you might have. We look forward to hearing from you.</p>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                <i class="fas fa-envelope-open-text" style="font-size: 5rem; opacity: 0.2;"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show d-flex align-items-center shadow-sm mb-4" role="alert">
+            <i class="fas fa-check-circle me-3 fs-4"></i>
+            <div>
+                <strong>Success!</strong> @Model.SuccessMessage
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row g-4 mb-5">
+        <!-- Call Us Card -->
+        <div class="col-md-4">
+            <div class="contact-card">
+                <div class="contact-icon">
+                    <i class="fas fa-phone-alt"></i>
+                </div>
+                <h5 class="text-center">Call Us</h5>
+                @if (!string.IsNullOrEmpty(Model.ContactPhone))
+                {
+                    <p class="text-center">Give us a call during business hours</p>
+                    <div class="text-center">
+                        <a href="tel:@Model.ContactPhone" class="btn btn-outline-primary">
+                            <i class="fas fa-phone me-2"></i>@Model.ContactPhone
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-center">Phone number will be available soon</p>
+                }
+            </div>
+        </div>
+
+        <!-- Visit Us Card -->
+        <div class="col-md-4">
+            <div class="contact-card">
+                <div class="contact-icon">
+                    <i class="fas fa-map-marker-alt"></i>
+                </div>
+                <h5 class="text-center">Visit Us</h5>
+                @if (!string.IsNullOrEmpty(Model.ContactLocation))
+                {
+                    <p class="text-center">@Model.ContactLocation</p>
+                    <div class="text-center">
+                        <button class="btn btn-outline-success" onclick="scrollToMap()">
+                            <i class="fas fa-map me-2"></i>View on Map
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-center">Location details will be available soon</p>
+                }
+            </div>
+        </div>
+
+        <!-- Business Hours Card -->
+        <div class="col-md-4">
+            <div class="contact-card">
+                <div class="contact-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <h5 class="text-center">Business Hours</h5>
+                <p class="text-center mb-2"><strong>Monday - Friday</strong></p>
+                <p class="text-center mb-3">9:00 AM - 5:00 PM</p>
+                <p class="text-center mb-2"><strong>Saturday</strong></p>
+                <p class="text-center mb-0">10:00 AM - 2:00 PM</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Contact Form -->
+        <div class="col-lg-6">
+            <div class="form-card">
+                <div class="form-header">
+                    <h4><i class="fas fa-envelope me-2"></i>Send Us a Message</h4>
+                    <p>Fill out the form below and we'll get back to you within 24 hours</p>
+                </div>
+                <div class="form-body">
+                    <form method="post" id="contactForm">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Input.Name" class="form-label">
+                                <i class="fas fa-user me-1"></i>Your Name
+                            </label>
+                            <input asp-for="Input.Name" class="form-control" placeholder="John Doe" />
+                            <span asp-validation-for="Input.Name" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Input.Email" class="form-label">
+                                <i class="fas fa-envelope me-1"></i>Email Address
+                            </label>
+                            <input asp-for="Input.Email" class="form-control" type="email" placeholder="john.doe@example.com" />
+                            <span asp-validation-for="Input.Email" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Input.Subject" class="form-label">
+                                <i class="fas fa-tag me-1"></i>Subject
+                            </label>
+                            <input asp-for="Input.Subject" class="form-control" placeholder="How can we help you?" />
+                            <span asp-validation-for="Input.Subject" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="Input.Message" class="form-label">
+                                <i class="fas fa-comment-dots me-1"></i>Your Message
+                            </label>
+                            <textarea asp-for="Input.Message" class="form-control" rows="6"
+                                      placeholder="Tell us more about your enquiry..."></textarea>
+                            <span asp-validation-for="Input.Message" class="text-danger"></span>
+                            <small class="text-muted">Maximum 2000 characters</small>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn-submit">
+                                <i class="fas fa-paper-plane me-2"></i>Send Message
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Map and Tips -->
+        <div class="col-lg-6">
+            <!-- Google Map -->
+            <div class="map-card" id="mapSection">
+                <div class="map-header">
+                    <h4><i class="fas fa-map-marked-alt me-2"></i>Find Us Here</h4>
+
+                    <!-- Location Status Indicator -->
+                    @if (Model.HasValidCoordinates && !string.IsNullOrEmpty(Model.ContactLocation) &&
+                    Model.ContactLocation != "Please contact us for location details.")
+                    {
+                        <div class="location-status location-success">
+                            <i class="fas fa-check-circle me-1"></i>
+                            Showing location for: @Model.ContactLocation
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="location-status location-fallback">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            Showing default location (Cape Town)
+                        </div>
+                    }
+                </div>
+                <div style="height: 400px; width: 100%;">
+                    <div id="map" style="height: 100%; width: 100%;"></div>
+                </div>
+            </div>
+
+            <!-- Quick Tips -->
+            <div class="tips-card">
+                <h5>
+                    <i class="fas fa-lightbulb text-warning me-2"></i>Quick Tips
+                </h5>
+                <ul class="list-unstyled mb-0">
+                    <li>
+                        <i class="fas fa-check-circle me-2"></i>
+                        We typically respond within 24 hours
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle me-2"></i>
+                        For urgent matters, please call us directly
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle me-2"></i>
+                        Check our FAQ section for instant answers
+                    </li>
+                    <li>
+                        <i class="fas fa-check-circle me-2"></i>
+                        Include order numbers for faster assistance
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <!-- Load Google Maps API without callback first -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBzkRHYkoGavY1pokTPp0L_qCAZee_6Pks"></script>
+
+    <script>
+        let map;
+        let marker;
+
+        // Initialise map function - called after DOM is fully loaded
+        function initMap() {
+            // Get the map container and verify it exists before attempting to create the map
+            const mapContainer = document.getElementById('map');
+
+            if (!mapContainer) {
+                console.error('Map container not found in DOM');
+                return;
+            }
+
+            // Dynamic coordinates from server-side model - use ToString with InvariantCulture to ensure dot decimal separator
+            const location = {
+                lat: @((Model.Latitude ?? -33.9249).ToString(System.Globalization.CultureInfo.InvariantCulture)),
+                lng: @((Model.Longitude ?? 18.4241).ToString(System.Globalization.CultureInfo.InvariantCulture))
+            };
+
+            console.log('Initialising map with coordinates:', location);
+            console.log('Map container dimensions:', {
+                width: mapContainer.offsetWidth,
+                height: mapContainer.offsetHeight
+            });
+
+            // Verify the container has dimensions before creating the map
+            if (mapContainer.offsetHeight === 0 || mapContainer.offsetWidth === 0) {
+                console.error('Map container has no dimensions - CSS issue detected');
+                return;
+            }
+
+            try {
+                // Create the Google Map instance
+                map = new google.maps.Map(mapContainer, {
+                    zoom: 15,
+                    center: location,
+                    mapTypeControl: true,
+                    streetViewControl: true,
+                    fullscreenControl: true,
+                    // Custom map styling to de-emphasise points of interest
+                    styles: [
+                        {
+                            featureType: 'poi',
+                            elementType: 'labels',
+                            stylers: [{ visibility: 'off' }]
+                        }
+                    ]
+                });
+
+                // Create a marker at the specified location
+                marker = new google.maps.Marker({
+                    position: location,
+                    map: map,
+                    title: '@Html.Raw(Model.CompanyName ?? "Our Business")',
+                    animation: google.maps.Animation.DROP
+                });
+
+                // Prepare dynamic content for the info window based on available data
+                const contactPhone = '@Html.Raw(Model.ContactPhone ?? "")';
+                const contactLocation = '@Html.Raw(Model.ContactLocation ?? "")';
+                const companyName = '@Html.Raw(Model.CompanyName ?? "Our Business")';
+
+                // Build the info window HTML content with conditional sections
+                const infoWindowContent = `
+                    <div style="padding: 10px; max-width: 250px;">
+                        <h6 class="fw-bold mb-2">${companyName}</h6>
+                        ${contactLocation && contactLocation !== 'Please contact us for location details.' ?
+                            `<p class="mb-1 small"><i class="fas fa-map-marker-alt me-1"></i>${contactLocation}</p>` : ''}
+                        ${contactPhone ?
+                            `<p class="mb-0 small"><i class="fas fa-phone me-1"></i>${contactPhone}</p>` : ''}
+                        <hr class="my-2">
+                        <small class="text-muted">
+        @if (Model.HasValidCoordinates && !string.IsNullOrEmpty(Model.ContactLocation) &&
+           Model.ContactLocation != "Please contact us for location details.")
+        {
+            <text>📍 Location auto-detected</text>
+        }
+        else
+        {
+            <text>📍 Default location shown</text>
+        }
+                        </small>
+                    </div>
+                `;
+
+                // Create the info window with the prepared content
+                const infoWindow = new google.maps.InfoWindow({
+                    content: infoWindowContent
+                });
+
+                // Add click listener to marker to open info window
+                marker.addListener('click', function() {
+                    infoWindow.open(map, marker);
+                });
+
+                // Automatically open the info window after a brief delay for visual effect
+                setTimeout(() => {
+                    infoWindow.open(map, marker);
+                }, 1000);
+
+                console.log('Map initialised successfully');
+            } catch (error) {
+                console.error('Error initialising map:', error);
+            }
+        }
+
+        // Function to smoothly scroll the page to the map section
+        function scrollToMap() {
+            const mapSection = document.getElementById('mapSection');
+            if (mapSection) {
+                mapSection.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }
+        }
+
+        // Wait for the DOM to be fully loaded before initialising the map
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM Content Loaded - preparing to initialise map');
+
+            // Small delay to ensure CSS is fully applied before map creation
+            setTimeout(initMap, 100);
+        });
+    </script>
+}

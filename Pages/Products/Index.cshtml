@@ -1,0 +1,1612 @@
+﻿@page
+@model OneClick_WebApp.Pages.Products.IndexModel
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+
+@{
+    ViewData["Title"] = "Products";
+    var maxPriceForSlider = 5000;
+}
+
+<style>
+    .products-page {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        margin-top: 2rem;
+        padding-top: 0;
+    }
+
+    .page-header {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .page-title {
+        font-size: 2.25rem;
+        font-weight: 700;
+        color: #1e40af;
+        margin-bottom: 0.5rem;
+    }
+
+    .page-subtitle {
+        color: #64748b;
+        font-size: 1.1rem;
+        margin: 0;
+    }
+
+    .sidebar {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid #e2e8f0;
+        position: sticky;
+        top: 140px;
+        max-height: calc(100vh - 160px);
+        overflow-y: auto;
+    }
+
+    .sidebar h4 {
+        color: #1e40af;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .search-section {
+        margin-bottom: 1.5rem;
+    }
+
+    .search-input-group {
+        position: relative;
+        display: flex;
+        width: 100%;
+    }
+
+    .search-input {
+        flex: 1;
+        padding: 0.75rem 0.875rem 0.75rem 2.25rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px 0 0 6px;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        background: white;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9ca3af;
+        z-index: 10;
+    }
+
+    .search-btn {
+        padding: 0.75rem 1rem;
+        background: #1e40af;
+        color: white;
+        border: 1px solid #1e40af;
+        border-left: none;
+        border-radius: 0 6px 6px 0;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+
+    .search-btn:hover {
+        background: #1e3a8a;
+        border-color: #1e3a8a;
+    }
+
+    .price-slider-section {
+        margin-bottom: 1.5rem;
+    }
+
+    .price-slider-container {
+        padding: 0.75rem 0;
+    }
+
+    .price-range-display {
+        text-align: center;
+        font-weight: 500;
+        color: #1e40af;
+        margin-bottom: 0.75rem;
+        font-size: 0.95rem;
+    }
+
+    .price-slider-inputs {
+        position: relative;
+        height: 6px;
+        background: #e2e8f0;
+        border-radius: 3px;
+        margin: 1rem 0;
+    }
+
+    .price-slider-inputs input[type="range"] {
+        position: absolute;
+        width: 100%;
+        height: 6px;
+        background: none;
+        pointer-events: none;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+
+    .price-slider-inputs input[type="range"]::-webkit-slider-thumb {
+        height: 20px;
+        width: 20px;
+        border-radius: 50%;
+        background: #1e40af;
+        pointer-events: auto;
+        -webkit-appearance: none;
+        box-shadow: 0 2px 8px rgba(30, 64, 175, 0.3);
+        cursor: pointer;
+        border: 2px solid white;
+    }
+
+    .price-slider-inputs input[type="range"]::-moz-range-thumb {
+        height: 20px;
+        width: 20px;
+        border-radius: 50%;
+        background: #1e40af;
+        pointer-events: auto;
+        border: 2px solid white;
+        box-shadow: 0 2px 8px rgba(30, 64, 175, 0.3);
+        cursor: pointer;
+    }
+
+    .sort-section select,
+    .categories-section select {
+        width: 100%;
+        padding: 0.875rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        background: #f8fafc;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .sort-section select:focus,
+    .categories-section select:focus {
+        outline: none;
+        border-color: #3b82f6;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .categories-section {
+        margin-bottom: 1.5rem;
+    }
+
+    .products-section {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        border: 1px solid #e2e8f0;
+    }
+
+    .products-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .results-count {
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    .view-toggle {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .view-btn {
+        padding: 0.5rem;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        color: #64748b;
+    }
+
+    .view-btn.active {
+        background: #1e40af;
+        color: white;
+        border-color: #1e40af;
+    }
+
+    .product-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .product-card {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        border: 1px solid #e2e8f0;
+        position: relative;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .product-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+
+    .product-image-container {
+        position: relative;
+        overflow: hidden;
+        height: 180px;
+        background: #f8fafc;
+    }
+
+    .product-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .product-card:hover .product-image {
+        transform: scale(1.05);
+    }
+
+    .product-badges {
+        position: absolute;
+        top: 0.75rem;
+        left: 0.75rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .product-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .badge-new {
+        background: #059669;
+        color: white;
+    }
+
+    .badge-sale {
+        background: #ef4444;
+        color: white;
+    }
+
+    .badge-low-stock {
+        background: #f59e0b;
+        color: white;
+    }
+
+    .product-actions {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .product-card:hover .product-actions {
+        opacity: 1;
+    }
+
+    .action-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: none;
+        background: rgba(255, 255, 255, 0.9);
+        color: #64748b;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .action-btn:hover {
+        background: white;
+        color: #1e40af;
+        transform: scale(1.1);
+    }
+
+    .product-info {
+        padding: 1rem;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .product-category {
+        color: #3b82f6;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.4rem;
+    }
+
+    .product-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+        line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .product-description {
+        color: #64748b;
+        font-size: 0.8rem;
+        line-height: 1.4;
+        margin-bottom: 0.75rem;
+        flex: 1;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .product-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: auto;
+    }
+
+    .product-price {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #059669;
+    }
+
+    .stock-indicator {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+
+    .stock-available {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .stock-low {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .stock-out {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .quantity-cart-container {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .quantity-controls {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .quantity-input {
+        width: 60px;
+        padding: 0.5rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        text-align: center;
+        font-size: 0.9rem;
+    }
+
+    .add-cart-btn {
+        width: 100%;
+        padding: 0.75rem;
+        background: #1e40af;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.05em;
+    }
+
+    .add-cart-btn:hover {
+        background: #1e3a8a;
+        transform: translateY(-1px);
+    }
+
+    .add-cart-btn:disabled {
+        background: #94a3b8;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .no-products {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #64748b;
+    }
+
+    .no-products i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        color: #cbd5e1;
+    }
+
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 3rem;
+    }
+
+    .pagination {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .page-link {
+        padding: 0.75rem 1rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        text-decoration: none;
+        color: #64748b;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .page-link:hover {
+        background: #f1f5f9;
+        color: #1e40af;
+        text-decoration: none;
+    }
+
+    .page-link.active {
+        background: #1e40af;
+        color: white;
+        border-color: #1e40af;
+    }
+
+    .notification-container {
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        width: 350px;
+        z-index: 1050;
+    }
+
+    .alert {
+        padding: 1rem 1.25rem;
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        animation: slideIn 0.3s ease;
+    }
+
+    .alert-success {
+        background: #d1fae5;
+        color: #065f46;
+        border-left: 4px solid #059669;
+    }
+
+    .alert-danger {
+        background: #fee2e2;
+        color: #991b1b;
+        border-left: 4px solid #ef4444;
+    }
+
+    @@keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(100%);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    /* Quick View Modal Styles */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(15, 23, 42, 0.85);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1100;
+        animation: fadeInOverlay 0.25s ease;
+        backdrop-filter: blur(4px);
+        padding: 20px;
+    }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+    @@keyframes fadeInOverlay {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    .modal-content {
+        background: #ffffff;
+        border-radius: 12px;
+        max-width: 900px;
+        width: 100%;
+        max-height: 85vh;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        position: relative;
+        display: grid;
+        grid-template-columns: 380px 1fr;
+        opacity: 0;
+        transform: scale(0.9);
+        animation: modalSlideIn 0.3s forwards ease-out;
+    }
+
+    @@keyframes modalSlideIn {
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    .modal-close {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        background: #ffffff;
+        border: none;
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        font-size: 1.25rem;
+        font-weight: 400;
+        color: #475569;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    }
+
+        .modal-close:hover, .modal-close:focus {
+            background: #0f172a;
+            color: white;
+            outline: none;
+        }
+
+    .modal-image-section {
+        position: relative;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        border-right: 1px solid #e2e8f0;
+    }
+
+    .modal-img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        max-height: 400px;
+    }
+
+    .modal-details {
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        background: #ffffff;
+    }
+
+        .modal-details::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .modal-details::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        .modal-details::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        .modal-details .category {
+            display: inline-block;
+            font-weight: 600;
+            color: #0c4a6e;
+            font-size: 0.75rem;
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            background: #e0f2fe;
+            padding: 0.35rem 0.85rem;
+            border-radius: 6px;
+            border: 1px solid #bae6fd;
+            width: fit-content;
+        }
+
+        .modal-details h2 {
+            font-weight: 600;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #0f172a;
+            line-height: 1.3;
+        }
+
+        .modal-details .price {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #0c4a6e;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+        }
+
+        .modal-details .description {
+            font-size: 0.9rem;
+            line-height: 1.65;
+            margin-bottom: 1.5rem;
+            color: #475569;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+    .modal-actions {
+        margin-top: auto;
+    }
+
+    .quantity-group {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+        padding: 0.75rem 0;
+    }
+
+        .quantity-group label {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: #0f172a;
+            min-width: 75px;
+        }
+
+        .quantity-group input[type="number"] {
+            width: 85px;
+            padding: 0.625rem 0.75rem;
+            font-size: 0.95rem;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            text-align: center;
+            font-weight: 600;
+            color: #0f172a;
+            transition: all 0.2s ease;
+            background: #ffffff;
+        }
+
+            .quantity-group input[type="number"]:focus {
+                outline: none;
+                border-color: #0c4a6e;
+                box-shadow: 0 0 0 3px rgba(12, 74, 110, 0.1);
+            }
+
+    .stock-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        color: #059669;
+        font-weight: 500;
+    }
+
+        .stock-info i {
+            font-size: 1rem;
+        }
+
+    .modal-buttons {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .add-to-cart-btn, .modal-login-btn {
+        flex: 1;
+        padding: 0.875rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-transform: none;
+        letter-spacing: 0.01em;
+        text-decoration: none;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .add-to-cart-btn {
+        background: #0c4a6e;
+        color: white;
+        box-shadow: 0 2px 8px rgba(12, 74, 110, 0.2);
+    }
+
+        .add-to-cart-btn:hover {
+            background: #0a3d5c;
+            box-shadow: 0 4px 12px rgba(12, 74, 110, 0.3);
+        }
+
+        .add-to-cart-btn:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+    .modal-login-btn {
+        background: #0c4a6e;
+        color: white;
+        box-shadow: 0 2px 8px rgba(12, 74, 110, 0.2);
+    }
+
+        .modal-login-btn:hover {
+            background: #0a3d5c;
+            box-shadow: 0 4px 12px rgba(12, 74, 110, 0.3);
+            text-decoration: none;
+            color: white;
+        }
+
+    /* RESPONSIVE DESIGN */
+    @@media (max-width: 768px) {
+        .modal-content {
+            grid-template-columns: 1fr;
+            max-height: 90vh;
+        }
+
+        .modal-image-section {
+            height: 220px;
+            padding: 1.5rem;
+            border-right: none;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .modal-img {
+            max-height: 180px;
+        }
+
+        .modal-details {
+            padding: 1.5rem;
+        }
+
+            .modal-details h2 {
+                font-size: 1.35rem;
+            }
+
+            .modal-details .price {
+                font-size: 1.5rem;
+            }
+
+        .quantity-group {
+            flex-wrap: wrap;
+        }
+
+        .modal-buttons {
+            flex-direction: column;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .modal-overlay {
+            padding: 0;
+        }
+
+        .modal-content {
+            width: 100%;
+            height: 100vh;
+            max-height: 100vh;
+            border-radius: 0;
+        }
+
+        .modal-details {
+            padding: 1.25rem;
+        }
+    }
+</style>
+
+<div class="products-page">
+    <!-- Notification Container -->
+    <div id="notification-container" class="notification-container" aria-live="polite"></div>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="container">
+            <h1 class="page-title">Our Products</h1>
+            <p class="page-subtitle">Browse our comprehensive collection of pharmacy and healthcare products</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <!-- Sidebar Filters -->
+            <aside class="col-lg-3">
+                <div class="sidebar">
+                    <form method="get" id="filterForm" aria-label="Product search and filters">
+                        <input type="hidden" asp-for="CategoryFilter" id="hiddenCategoryFilter" />
+                        <input type="hidden" asp-for="MinPrice" id="hiddenMinPrice" />
+                        <input type="hidden" asp-for="MaxPrice" id="hiddenMaxPrice" />
+
+                        <!-- Search Section -->
+                        @* <div class="search-section">
+                            <h4>Search Products</h4>
+                            <div class="search-input-group">
+                                <i class="fas fa-search search-icon"></i>
+                                <input type="text"
+                                       class="search-input"
+                                       placeholder="Search medicines, health products..."
+                                       asp-for="SearchTerm"
+                                       aria-label="Search term" />
+                                <button class="search-btn" type="submit" aria-label="Submit search">
+                                    <i class="fas fa-arrow-right"></i>
+                                </button>
+                            </div>
+                        </div> *@
+
+                        <!-- Categories Dropdown Section -->
+                        <div class="categories-section">
+                            <h4>Category</h4>
+                            <select id="categorySelect" 
+                                    onchange="document.getElementById('hiddenCategoryFilter').value = this.value; document.getElementById('filterForm').submit();"
+                                    aria-label="Filter by category">
+                                <option value="">All Categories</option>
+                                @foreach (var category in Model.Categories)
+                                {
+                                    <option value="@category.Id" selected="@(Model.CategoryFilter == category.Id)">
+                                        @category.Name
+                                    </option>
+                                }
+                            </select>
+                        </div>
+
+                        <!-- Price Range Section -->
+                        <div class="price-slider-section">
+                            <h4>Price Range</h4>
+                            <div class="price-slider-container">
+                                <div id="price-range-label" class="price-range-display">
+                                    @((Model.MinPrice ?? 0).ToString("C0", new System.Globalization.CultureInfo("en-ZA"))) - @((Model.MaxPrice ?? maxPriceForSlider).ToString("C0", new System.Globalization.CultureInfo("en-ZA")))
+                                </div>
+                                <div class="price-slider-inputs">
+                                    <input type="range"
+                                           id="minPriceSlider"
+                                           value="@(Model.MinPrice ?? 0)"
+                                           min="0"
+                                           max="@maxPriceForSlider"
+                                           step="10">
+                                    <input type="range"
+                                           id="maxPriceSlider"
+                                           value="@(Model.MaxPrice ?? maxPriceForSlider)"
+                                           min="0"
+                                           max="@maxPriceForSlider"
+                                           step="10">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sort Section -->
+                        <div class="sort-section">
+                            <h4>Sort By</h4>
+                            <select name="SortOrder"
+                                    id="sortOrderSelect"
+                                    onchange="this.form.submit();"
+                                    asp-for="SortOrder"
+                                    aria-label="Sort products by">
+                                <option value="name_asc">Name (A-Z)</option>
+                                <option value="name_desc">Name (Z-A)</option>
+                                <option value="price_asc">Price (Low to High)</option>
+                                <option value="price_desc">Price (High to Low)</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+            </aside>
+
+            <!-- Products Section -->
+            <main class="col-lg-9">
+                <div class="products-section">
+                    <!-- Products Header -->
+                    <div class="products-header">
+                        <div class="results-count">
+                            <strong>@Model.Products.Count</strong> products found
+                            @if (!string.IsNullOrEmpty(Model.SearchTerm))
+                            {
+                                <span> for "@Model.SearchTerm"</span>
+                            }
+                        </div>
+                        <div class="view-toggle">
+                            <button class="view-btn active" title="Grid View">
+                                <i class="fas fa-th"></i>
+                            </button>
+                            <button class="view-btn" title="List View">
+                                <i class="fas fa-list"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    @if (Model.Products.Any())
+                    {
+                        <input type="hidden" id="antiForgeryToken" name="__RequestVerificationToken" value="@(Antiforgery.GetAndStoreTokens(HttpContext).RequestToken)" />
+
+                        <!-- Products Grid -->
+                        <div class="product-grid">
+                            @foreach (var product in Model.Products)
+                            {
+                                var isWishlisted = Model.WishlistProductIds?.Contains(product.Id) ?? false;
+                                var availableStock = Model.StockByProduct.GetValueOrDefault(product.Id, 0);
+                                var stockStatus = availableStock > 10 ? "available" : availableStock > 0 ? "low" : "out";
+
+                                <article class="product-card" data-product-id="@product.Id">
+                                    <!-- Product Image -->
+                                    <div class="product-image-container">
+                                        <a asp-page="/Products/Details" asp-route-id="@product.Id">
+                                            <img src="@(string.IsNullOrEmpty(product.ImageUrl) ? "https://placehold.co/280x240/f8fafc/64748b?text=No+Image" : product.ImageUrl)"
+                                                 alt="@product.Name"
+                                                 class="product-image"
+                                                 loading="lazy">
+                                        </a>
+
+                                        <!-- Product Badges -->
+                                        <div class="product-badges">
+                                            @if (availableStock <= 5 && availableStock > 0)
+                                            {
+                                                <span class="product-badge badge-low-stock">Low Stock</span>
+                                            }
+                                            @if (product.Price < 50)
+                                            {
+                                                <span class="product-badge badge-sale">Sale</span>
+                                            }
+                                        </div>
+
+                                        <!-- Product Actions -->
+                                        @if (User.Identity?.IsAuthenticated == true)
+                                        {
+                                            <div class="product-actions">
+                                                <button class="action-btn wishlist-btn"
+                                                        title="@(isWishlisted ? "Remove from Wishlist" : "Add to Wishlist")"
+                                                        data-product-id="@product.Id">
+                                                    <i class="@(isWishlisted ? "fas" : "far") fa-heart"></i>
+                                                </button>
+                                                <button class="action-btn quick-view-btn"
+                                                        title="Quick View"
+                                                        data-product='@System.Text.Json.JsonSerializer.Serialize(new { product.Id, product.Name, Category = product.Category?.Name, product.Description, product.Price, ImageUrl = string.IsNullOrEmpty(product.ImageUrl) ? "https://placehold.co/280x240/f8fafc/64748b?text=No+Image" : product.ImageUrl })'>
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    <!-- Product Info -->
+                                    <div class="product-info">
+                                        <div class="product-category">@(product.Category?.Name ?? "General")</div>
+                                        <h3 class="product-title">
+                                            <a asp-page="/Products/Details" asp-route-id="@product.Id" style="color: inherit; text-decoration: none;">
+                                                @product.Name
+                                            </a>
+                                        </h3>
+                                        <p class="product-description">@(product.Description ?? "Quality pharmacy product with professional standards and healthcare compliance.")</p>
+
+                                        <div class="product-footer">
+                                            <div class="product-price">
+                                                @product.Price.ToString("C", new System.Globalization.CultureInfo("en-ZA"))
+                                            </div>
+                                            <div class="stock-indicator stock-@stockStatus">
+                                                @if (stockStatus == "available")
+                                                {
+                                                    <span>In Stock</span>
+                                                }
+                                                else if (stockStatus == "low")
+                                                {
+                                                    <span>@availableStock left</span>
+                                                }
+                                                else
+                                                {
+                                                    <span>Out of Stock</span>
+                                                }
+                                            </div>
+                                        </div>
+
+                                        @if (User.Identity?.IsAuthenticated == true && availableStock > 0)
+                                        {
+                                            <div class="quantity-cart-container">
+                                                <div class="quantity-controls">
+                                                    <label for="qty-@product.Id" class="visually-hidden">Quantity</label>
+                                                    <input type="number"
+                                                           id="qty-@product.Id"
+                                                           class="quantity-input"
+                                                           value="1"
+                                                           min="1"
+                                                           max="@availableStock"
+                                                           data-quantity-input>
+                                                    <span class="small text-muted">Max: @availableStock</span>
+                                                </div>
+                                                <button type="button"
+                                                        class="add-cart-btn"
+                                                        data-product-id="@product.Id"
+                                                        @(availableStock == 0 ? "disabled" : "")>
+                                                    <i class="fas fa-shopping-cart me-1"></i>
+                                                    Add to Cart
+                                                </button>
+                                            </div>
+                                        }
+                                        else if (User.Identity?.IsAuthenticated != true)
+                                        {
+                                            <div class="quantity-cart-container">
+                                                <a asp-page="/Account/Login"
+                                                   class="add-cart-btn"
+                                                   style="display: block; text-align: center; text-decoration: none;">
+                                                    Sign In to Buy
+                                                </a>
+                                            </div>
+                                        }
+                                    </div>
+                                </article>
+                            }
+                        </div>
+
+                        <!-- Pagination -->
+                        @if (Model.TotalPages > 1)
+                        {
+                            <div class="pagination-container">
+                                <nav aria-label="Page navigation">
+                                    <div class="pagination">
+                                        @if (Model.CurrentPage > 1)
+                                        {
+                                            <a class="page-link"
+                                               asp-page="/Products/Index"
+                                               asp-route-currentPage="@(Model.CurrentPage - 1)"
+                                               asp-route-searchTerm="@Model.SearchTerm"
+                                               asp-route-categoryFilter="@Model.CategoryFilter"
+                                               asp-route-minPrice="@Model.MinPrice"
+                                               asp-route-maxPrice="@Model.MaxPrice"
+                                               asp-route-sortOrder="@Model.SortOrder">
+                                                <i class="fas fa-chevron-left me-1"></i>
+                                                Previous
+                                            </a>
+                                        }
+
+                                        @for (int i = Math.Max(1, Model.CurrentPage - 2); i <= Math.Min(Model.TotalPages, Model.CurrentPage + 2); i++)
+                                        {
+                                            <a class="page-link @(i == Model.CurrentPage ? "active" : "")"
+                                               asp-page="/Products/Index"
+                                               asp-route-currentPage="@i"
+                                               asp-route-searchTerm="@Model.SearchTerm"
+                                               asp-route-categoryFilter="@Model.CategoryFilter"
+                                               asp-route-minPrice="@Model.MinPrice"
+                                               asp-route-maxPrice="@Model.MaxPrice"
+                                               asp-route-sortOrder="@Model.SortOrder">@i</a>
+                                        }
+
+                                        @if (Model.CurrentPage < Model.TotalPages)
+                                        {
+                                            <a class="page-link"
+                                               asp-page="/Products/Index"
+                                               asp-route-currentPage="@(Model.CurrentPage + 1)"
+                                               asp-route-searchTerm="@Model.SearchTerm"
+                                               asp-route-categoryFilter="@Model.CategoryFilter"
+                                               asp-route-minPrice="@Model.MinPrice"
+                                               asp-route-maxPrice="@Model.MaxPrice"
+                                               asp-route-sortOrder="@Model.SortOrder">
+                                                Next
+                                                <i class="fas fa-chevron-right ms-1"></i>
+                                            </a>
+                                        }
+                                    </div>
+                                </nav>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <!-- No Products Found -->
+                        <div class="no-products">
+                            <i class="fas fa-search"></i>
+                            <h3>No Products Found</h3>
+                            <p>We couldn't find any products matching your search criteria.</p>
+                            <p>Try adjusting your filters or search terms.</p>
+                            <a asp-page="/Products/Index" class="btn btn-primary mt-3">
+                                <i class="fas fa-refresh me-2"></i>
+                                Clear All Filters
+                            </a>
+                        </div>
+                    }
+                </div>
+            </main>
+        </div>
+    </div>
+</div>
+
+<!-- Quick View Modal -->
+<div id="quickViewModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="quickViewTitle" tabindex="-1">
+    <div class="modal-content" role="document">
+        <button class="modal-close" aria-label="Close quick view" type="button">&times;</button>
+
+        <!-- Image Section -->
+        <div class="modal-image-section">
+            <img src="" alt="" class="modal-img" id="modalProductImage" />
+        </div>
+
+        <!-- Details Section -->
+        <div class="modal-details">
+            <!-- Header -->
+            <div class="modal-header">
+                <div class="category" id="modalProductCategory"></div>
+                <h2 id="quickViewTitle"></h2>
+                <div class="price" id="modalProductPrice">
+                    <span class="price-amount"></span>
+                    <span class="price-badge">Best Value</span>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="description" id="quickViewDesc"></div>
+
+            <!-- Actions -->
+            <div class="modal-actions" id="modal-action-area">
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <div id="modal-auth-controls">
+                        <div class="quantity-group">
+                            <label for="modalQuantity">Quantity:</label>
+                            <input type="number" id="modalQuantity" value="1" min="1" />
+                            <div class="stock-info">
+                                <i class="fas fa-check-circle stock-available"></i>
+                                <span id="stockStatus">In Stock</span>
+                            </div>
+                        </div>
+                        <div class="modal-buttons">
+                            <button type="button" class="add-to-cart-btn" id="modalAddToCartBtn" data-product-id="">
+                                <i class="fas fa-shopping-cart"></i>
+                                Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="modal-buttons">
+                        <a href="/Account/Login" class="modal-login-btn">
+                            <i class="fas fa-sign-in-alt"></i>
+                            Login to Purchase
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Price slider elements
+            const minPriceSlider = document.getElementById('minPriceSlider');
+            const maxPriceSlider = document.getElementById('maxPriceSlider');
+            const priceLabel = document.getElementById('price-range-label');
+            const hiddenMinPrice = document.getElementById('hiddenMinPrice');
+            const hiddenMaxPrice = document.getElementById('hiddenMaxPrice');
+            const filterForm = document.getElementById('filterForm');
+            const token = document.getElementById('antiForgeryToken')?.value;
+
+            // Notification system
+            function showNotification(message, type = 'success') {
+                const container = document.getElementById('notification-container');
+                if (!container) return;
+
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${type}`;
+                alertDiv.innerHTML = `
+                    <strong>${type === 'success' ? 'Success!' : 'Error!'}</strong> ${message}
+                    <button type="button" class="btn-close float-end" onclick="this.parentElement.remove()" style="background: none; border: none; font-size: 1.2rem; opacity: 0.7;">&times;</button>
+                `;
+
+                container.appendChild(alertDiv);
+
+                setTimeout(() => {
+                    if (alertDiv.parentElement) {
+                        alertDiv.remove();
+                    }
+                }, 4000);
+            }
+
+            // Price slider functionality
+            function updatePriceSlider() {
+                if (!minPriceSlider || !maxPriceSlider || !priceLabel || !hiddenMinPrice || !hiddenMaxPrice) return;
+
+                let minVal = parseInt(minPriceSlider.value);
+                let maxVal = parseInt(maxPriceSlider.value);
+
+                // Ensure minimum gap between sliders
+                if (minVal > maxVal - 50) {
+                    if (this && this.id === 'minPriceSlider') {
+                        minPriceSlider.value = maxVal - 50;
+                        minVal = maxVal - 50;
+                    } else {
+                        maxPriceSlider.value = minVal + 50;
+                        maxVal = minVal + 50;
+                    }
+                }
+
+                // Format prices in South African Rand
+                const formatPrice = (price) => {
+                    return new Intl.NumberFormat('en-ZA', {
+                        style: 'currency',
+                        currency: 'ZAR',
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0
+                    }).format(price);
+                };
+
+                priceLabel.textContent = `${formatPrice(minVal)} - ${formatPrice(maxVal)}`;
+                hiddenMinPrice.value = minVal;
+                hiddenMaxPrice.value = maxVal;
+            }
+
+            // Initialise price sliders
+            if (minPriceSlider && maxPriceSlider) {
+                minPriceSlider.addEventListener('input', updatePriceSlider);
+                maxPriceSlider.addEventListener('input', updatePriceSlider);
+                minPriceSlider.addEventListener('change', () => filterForm.submit());
+                maxPriceSlider.addEventListener('change', () => filterForm.submit());
+                updatePriceSlider();
+            }
+
+            // Add to cart functionality with loading indicator
+            async function addToCart(productId, quantity) {
+                if (!token) {
+                    showNotification('Security error. Please refresh the page.', 'danger');
+                    return false;
+                }
+
+                // Show loading indicator
+                LoadingManager.showHourglass('Adding to cart...');
+
+                const formData = new URLSearchParams();
+                formData.append('productId', productId);
+                formData.append('quantity', quantity);
+
+                try {
+                    const response = await fetch('?handler=AddToCartAjax', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'RequestVerificationToken': token
+                        },
+                        body: formData.toString()
+                    });
+
+                    // Hide loading indicator
+                    LoadingManager.hide();
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        showNotification(result.message, 'success');
+                        sessionStorage.setItem("cart", JSON.stringify(result.cart));
+
+                        // Update header badges if function exists
+                        if (typeof refreshHeaderBadges === 'function') {
+                            refreshHeaderBadges();
+                        }
+
+                        return true;
+                    } else {
+                        showNotification(result.message || 'Failed to add product to cart.', 'danger');
+                        return false;
+                    }
+                } catch (error) {
+                    // Hide loading on error
+                    LoadingManager.hide();
+                    console.error('Error adding to cart:', error);
+                    showNotification('Failed to add product to cart. Please try again.', 'danger');
+                    return false;
+                }
+            }
+
+            // Wishlist functionality with loading indicator
+            async function toggleWishlist(productId, button) {
+                if (!token) {
+                    showNotification('Security error. Please refresh the page.', 'danger');
+                    return;
+                }
+
+                // Show loading indicator
+                LoadingManager.showHourglass('Updating wishlist...');
+
+                const formData = new URLSearchParams();
+                formData.append('productId', productId);
+
+                try {
+                    const response = await fetch('?handler=ToggleWishlist', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'RequestVerificationToken': token
+                        },
+                        body: formData.toString()
+                    });
+
+                    // Hide loading indicator
+                    LoadingManager.hide();
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        const icon = button.querySelector('i');
+                        if (result.isWishlisted) {
+                            icon.classList.remove('far');
+                            icon.classList.add('fas');
+                            button.title = 'Remove from Wishlist';
+                        } else {
+                            icon.classList.remove('fas');
+                            icon.classList.add('far');
+                            button.title = 'Add to Wishlist';
+                        }
+
+                        showNotification(result.message, 'success');
+
+                        // Update session storage
+                        let wishlist = JSON.parse(sessionStorage.getItem("wishlist")) || [];
+                        if (result.isWishlisted) {
+                            if (!wishlist.includes(productId)) wishlist.push(productId);
+                        } else {
+                            wishlist = wishlist.filter(id => id !== productId);
+                        }
+                        sessionStorage.setItem("wishlist", JSON.stringify(wishlist));
+
+                        if (typeof refreshHeaderBadges === 'function') {
+                            refreshHeaderBadges();
+                        }
+                    } else {
+                        showNotification(result.message || 'Failed to update wishlist.', 'danger');
+                    }
+                } catch (error) {
+                    // Hide loading on error
+                    LoadingManager.hide();
+                    console.error('Error toggling wishlist:', error);
+                    showNotification('Failed to update wishlist. Please try again.', 'danger');
+                }
+            }
+
+            // Event delegation for dynamic content
+            document.addEventListener('click', async function(e) {
+                // Quick view button - works for all users
+                if (e.target.closest('.quick-view-btn')) {
+                    e.preventDefault();
+                    const button = e.target.closest('.quick-view-btn');
+                    try {
+                        const productData = JSON.parse(button.dataset.product);
+                        openQuickView(productData);
+                    } catch (error) {
+                        console.error('Error parsing product data:', error);
+                    }
+                }
+
+                // Add to cart button
+                if (e.target.closest('.add-cart-btn') && !e.target.closest('a')) {
+                    e.preventDefault();
+                    const button = e.target.closest('.add-cart-btn');
+                    const productId = button.dataset.productId;
+                    const quantityInput = button.closest('.product-card').querySelector('[data-quantity-input]');
+                    const quantity = quantityInput ? parseInt(quantityInput.value) || 1 : 1;
+
+                    // Disable button during request
+                    button.disabled = true;
+                    const originalText = button.innerHTML;
+                    button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Adding...';
+
+                    const success = await addToCart(productId, quantity);
+
+                    if (success && quantityInput) {
+                        quantityInput.value = 1; // Reset quantity
+                    }
+
+                    // Re-enable button
+                    button.disabled = false;
+                    button.innerHTML = originalText;
+                }
+
+                // Wishlist button
+                if (e.target.closest('.wishlist-btn')) {
+                    e.preventDefault();
+                    const button = e.target.closest('.wishlist-btn');
+                    const productId = button.dataset.productId;
+                    await toggleWishlist(productId, button);
+                }
+
+                // Modal close functionality
+                if (e.target.classList.contains('modal-close') || (e.target.classList.contains('modal-overlay') && e.target === e.currentTarget)) {
+                    closeQuickView();
+                }
+            });
+
+            // Quick View Modal Functions
+            function openQuickView(productData) {
+                const modal = document.getElementById('quickViewModal');
+                const modalImage = document.getElementById('modalProductImage');
+                const modalTitle = document.getElementById('quickViewTitle');
+                const modalCategory = document.getElementById('modalProductCategory');
+                const modalPrice = document.getElementById('modalProductPrice');
+                const modalDescription = document.getElementById('quickViewDesc');
+                const modalQuantityInput = document.getElementById('modalQuantity');
+                const modalAddToCartBtn = document.getElementById('modalAddToCartBtn');
+
+                if (!modal) return;
+
+                modalImage.src = productData.ImageUrl || "https://placehold.co/200x200/f8fafc/64748b?text=No+Image";
+                modalImage.alt = productData.Name;
+                modalTitle.textContent = productData.Name;
+                modalCategory.textContent = productData.Category || '';
+
+                // Format price in ZAR
+                const formatPrice = (price) => {
+                    return new Intl.NumberFormat('en-ZA', {
+                        style: 'currency',
+                        currency: 'ZAR'
+                    }).format(price);
+                };
+                modalPrice.textContent = formatPrice(productData.Price);
+                modalDescription.textContent = productData.Description || 'Quality pharmacy product with professional standards and healthcare compliance.';
+
+                // Set up modal cart functionality if user is logged in
+                if (modalQuantityInput && modalAddToCartBtn) {
+                    modalQuantityInput.value = 1;
+                    modalAddToCartBtn.dataset.productId = productData.Id;
+                }
+
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden'; // Prevent background scrolling
+            }
+
+            function closeQuickView() {
+                const modal = document.getElementById('quickViewModal');
+                if (modal) {
+                    modal.classList.remove('active');
+                    document.body.style.overflow = ''; // Restore scrolling
+                }
+            }
+
+            // Modal add to cart functionality with loading indicator
+            const modalAddToCartBtn = document.getElementById('modalAddToCartBtn');
+            if (modalAddToCartBtn) {
+                modalAddToCartBtn.addEventListener('click', async function() {
+                    const productId = this.dataset.productId;
+                    const modalQuantityInput = document.getElementById('modalQuantity');
+                    const quantity = parseInt(modalQuantityInput.value) || 1;
+
+                    // Disable button during request
+                    this.disabled = true;
+                    const originalText = this.innerHTML;
+                    this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Adding...';
+
+                    const success = await addToCart(productId, quantity);
+
+                    if (success) {
+                        modalQuantityInput.value = 1; // Reset quantity
+                        closeQuickView();
+                    }
+
+                    // Re-enable button
+                    this.disabled = false;
+                    this.innerHTML = originalText;
+                });
+            }
+
+            // Close modal with Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeQuickView();
+                }
+            });
+
+            // Quantity input validation
+            document.addEventListener('input', function(e) {
+                if (e.target.matches('[data-quantity-input]')) {
+                    const input = e.target;
+                    const min = parseInt(input.min) || 1;
+                    const max = parseInt(input.max) || 99;
+                    let value = parseInt(input.value);
+
+                    if (isNaN(value) || value < min) {
+                        input.value = min;
+                    } else if (value > max) {
+                        input.value = max;
+                        showNotification(`Maximum quantity available: ${max}`, 'warning');
+                    }
+                }
+            });
+
+            // View toggle functionality (placeholder)
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+
+                    // Placeholder for view switching logic
+                    showNotification('View toggle feature coming soon!', 'info');
+                });
+            });
+        });
+    </script>
+}

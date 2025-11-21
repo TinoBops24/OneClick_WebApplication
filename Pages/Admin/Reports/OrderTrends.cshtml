@@ -1,0 +1,821 @@
+﻿@page
+@model OneClick_WebApp.Pages.Admin.Reports.OrderTrendsModel
+@attribute [Authorize(Policy = "AdminOnly")]
+@{
+    ViewData["Title"] = "Order Trends Report";
+    ViewData["Subtitle"] = "Comprehensive analysis of order patterns and revenue trends";
+    Layout = "_AdminLayout";
+}
+
+<!-- Report Header with Filters -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h5 class="mb-1">
+                            <i class="bi bi-graph-up-arrow me-2 text-primary"></i>
+                            Order Trends Analysis
+                        </h5>
+                        <small class="text-muted">Track order patterns, revenue growth, and business performance</small>
+                    </div>
+                    <div>
+                        <button class="btn btn-outline-primary btn-sm" onclick="window.print()">
+                            <i class="bi bi-printer me-1"></i>Print Report
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Date Range Filter Form -->
+                <form method="get" class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label for="startDate" class="form-label">Start Date</label>
+                        <input type="date"
+                               class="form-control"
+                               id="startDate"
+                               name="StartDate"
+                               value="@Model.StartDate?.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-md-3">
+                        <label for="endDate" class="form-label">End Date</label>
+                        <input type="date"
+                               class="form-control"
+                               id="endDate"
+                               name="EndDate"
+                               value="@Model.EndDate?.ToString("yyyy-MM-dd")" />
+                    </div>
+                    @* <div class="col-md-3">
+                        <label for="groupBy" class="form-label">Group By</label>
+                        <select class="form-select" id="groupBy" name="GroupBy">
+                            <option value="day" selected>Daily</option>
+                            <option value="week">Weekly</option>
+                            <option value="month">Monthly</option>
+                        </select>
+                    </div> *@
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-funnel me-1"></i>Apply Filters
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Quick filter buttons -->
+                <div class="mt-3">
+                    <small class="text-muted me-2">Quick filters:</small>
+                    <a href="?StartDate=@DateTime.Today.AddDays(-7).ToString("yyyy-MM-dd")&EndDate=@DateTime.Today.ToString("yyyy-MM-dd")"
+                       class="btn btn-sm btn-outline-secondary me-1">Last 7 Days</a>
+                    <a href="?StartDate=@DateTime.Today.AddDays(-30).ToString("yyyy-MM-dd")&EndDate=@DateTime.Today.ToString("yyyy-MM-dd")"
+                       class="btn btn-sm btn-outline-secondary me-1">Last 30 Days</a>
+                    <a href="?StartDate=@DateTime.Today.AddDays(-90).ToString("yyyy-MM-dd")&EndDate=@DateTime.Today.ToString("yyyy-MM-dd")"
+                       class="btn btn-sm btn-outline-secondary me-1">Last 90 Days</a>
+                    <a href="?StartDate=@(new DateTime(DateTime.Today.Year, 1, 1).ToString("yyyy-MM-dd"))&EndDate=@DateTime.Today.ToString("yyyy-MM-dd")"
+                       class="btn btn-sm btn-outline-secondary">Year to Date</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Statistics Cards -->
+<div class="row mb-4">
+    <!-- Total Orders Card -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card border-left-primary h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Total Orders
+                        </div>
+                        <div class="h4 mb-0 font-weight-bold text-gray-800 counter" data-target="@Model.TotalOrders">0</div>
+                        @if (Model.OrderGrowthPercentage != 0)
+                        {
+                            <div class="mt-2">
+                                <small class="@(Model.OrderGrowthPercentage > 0 ? "text-success" : "text-danger")">
+                                    <i class="bi bi-arrow-@(Model.OrderGrowthPercentage > 0 ? "up" : "down") me-1"></i>
+                                    @Model.OrderGrowthPercentage.ToString("F1")% vs previous period
+                                </small>
+                            </div>
+                        }
+                    </div>
+                    <div class="col-auto">
+                        <div class="stats-icon bg-primary">
+                            <i class="bi bi-cart-check"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Revenue Card -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card border-left-success h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Total Revenue
+                        </div>
+                        <div class="h4 mb-0 font-weight-bold text-gray-800">
+                            R <span class="counter" data-target="@((int)Model.TotalRevenue)">0</span>
+                        </div>
+                        @if (Model.RevenueGrowthPercentage != 0)
+                        {
+                            <div class="mt-2">
+                                <small class="@(Model.RevenueGrowthPercentage > 0 ? "text-success" : "text-danger")">
+                                    <i class="bi bi-arrow-@(Model.RevenueGrowthPercentage > 0 ? "up" : "down") me-1"></i>
+                                    @Model.RevenueGrowthPercentage.ToString("F1")% vs previous period
+                                </small>
+                            </div>
+                        }
+                    </div>
+                    <div class="col-auto">
+                        <div class="stats-icon bg-success">
+                            <i class="bi bi-currency-dollar"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Average Order Value Card -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card border-left-info h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Average Order Value
+                        </div>
+                        <div class="h4 mb-0 font-weight-bold text-gray-800">
+                            R @Model.AverageOrderValue.ToString("N2")
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                Per order transaction
+                            </small>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <div class="stats-icon bg-info">
+                            <i class="bi bi-graph-up"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Customers Card -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stats-card border-left-warning h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Active Customers
+                        </div>
+                        <div class="h4 mb-0 font-weight-bold text-gray-800 counter" data-target="@Model.TotalCustomers">0</div>
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                Placed orders in period
+                            </small>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <div class="stats-icon bg-warning">
+                            <i class="bi bi-people"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Top Performance Highlights -->
+@if (Model.DailyTrends.Any())
+{
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-trophy me-2"></i>
+                        Top Performance Highlights
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center p-3 bg-light rounded">
+                                <div class="me-3">
+                                    <div class="stats-icon bg-success" style="width: 50px; height: 50px;">
+                                        <i class="bi bi-trophy-fill"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <small class="text-muted d-block">Highest Revenue Day</small>
+                                    <h5 class="mb-0 text-success">R @Model.HighestDailyRevenue.ToString("N2")</h5>
+                                    <small class="text-muted">@Model.HighestRevenueDate</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center p-3 bg-light rounded">
+                                <div class="me-3">
+                                    <div class="stats-icon bg-primary" style="width: 50px; height: 50px;">
+                                        <i class="bi bi-cart-check-fill"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <small class="text-muted d-block">Busiest Day</small>
+                                    <h5 class="mb-0 text-primary">@Model.BusiestDayOrderCount Orders</h5>
+                                    <small class="text-muted">@Model.BusiestDay</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Charts Section -->
+<div class="row mb-4">
+    <!-- Daily Trends Line Chart -->
+    <div class="col-lg-8 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <i class="bi bi-graph-up me-2"></i>
+                    Daily Order Trends
+                </h6>
+                <small class="text-muted">Orders and Revenue over Time</small>
+            </div>
+            <div class="card-body">
+                <div style="position: relative; height: 350px;">
+                    <canvas id="dailyTrendsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Status Breakdown Pie Chart -->
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-pie-chart me-2"></i>
+                    Orders by Status
+                </h6>
+            </div>
+            <div class="card-body">
+                <div style="position: relative; height: 250px;">
+                    <canvas id="statusBreakdownChart"></canvas>
+                </div>
+
+                <!-- Status Legend -->
+                <div class="mt-3">
+                    @foreach (var status in Model.OrdersByStatus.Take(5))
+                    {
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-muted">@status.Status</span>
+                            <div>
+                                <span class="badge bg-primary me-2">@status.Count</span>
+                                <small class="text-muted">(@status.Percentage.ToString("F1")%)</small>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Monthly Comparison and Peak Hours -->
+<div class="row mb-4">
+    <!-- Monthly Comparison Bar Chart -->
+    @if (Model.MonthlyData.Any())
+    {
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-bar-chart me-2"></i>
+                        Monthly Comparison
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div style="position: relative; height: 300px;">
+                        <canvas id="monthlyComparisonChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Peak Hours Analysis -->
+    @if (Model.PeakHours.Any())
+    {
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-clock-history me-2"></i>
+                        Peak Ordering Hours
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div style="position: relative; height: 300px;">
+                        <canvas id="peakHoursChart"></canvas>
+                    </div>
+
+                    <!-- Peak Hours Summary -->
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <i class="bi bi-lightbulb me-1"></i>
+                            <strong>Insight:</strong>
+                            @{
+                                var topHour = Model.PeakHours.OrderByDescending(h => h.OrderCount).FirstOrDefault();
+                                if (topHour != null)
+                                {
+                                    <text>Peak ordering time is @topHour.HourLabel with @topHour.OrderCount orders</text>
+                                }
+                            }
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Detailed Data Table -->
+@if (Model.DailyTrends.Any())
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="bi bi-table me-2"></i>
+                        Detailed Daily Breakdown
+                    </h6>
+                    @* <button class="btn btn-sm btn-outline-primary" onclick="exportTableToCSV()">
+                        <i class="bi bi-download me-1"></i>Export CSV
+                    </button> *@
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="detailedDataTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th class="text-end">Orders</th>
+                                    <th class="text-end">Revenue</th>
+                                    <th class="text-end">Avg Order Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var trend in Model.DailyTrends)
+                                {
+                                    <tr>
+                                        <td>@trend.FullDate.ToString("dd MMM yyyy (ddd)")</td>
+                                        <td class="text-end">
+                                            <span class="badge bg-primary">@trend.OrderCount</span>
+                                        </td>
+                                        <td class="text-end fw-bold text-success">
+                                            R @trend.Revenue.ToString("N2")
+                                        </td>
+                                        <td class="text-end">
+                                            R @trend.AverageOrderValue.ToString("N2")
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot class="table-light fw-bold">
+                                <tr>
+                                    <td>TOTAL</td>
+                                    <td class="text-end">@Model.TotalOrders</td>
+                                    <td class="text-end text-success">R @Model.TotalRevenue.ToString("N2")</td>
+                                    <td class="text-end">R @Model.AverageOrderValue.ToString("N2")</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- No Data State -->
+@if (!Model.DailyTrends.Any())
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
+                    <h5 class="mt-3 text-muted">No Orders Found</h5>
+                    <p class="text-muted">
+                        No orders were placed during the selected date range.
+                        Try adjusting your date filters or check a different time period.
+                    </p>
+                    <a href="?StartDate=@DateTime.Today.AddDays(-30).ToString("yyyy-MM-dd")&EndDate=@DateTime.Today.ToString("yyyy-MM-dd")"
+                       class="btn btn-primary">
+                        <i class="bi bi-arrow-clockwise me-1"></i>View Last 30 Days
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        // Serialise C# data to JavaScript
+        const dailyTrendsData = @Html.Raw(Json.Serialize(Model.DailyTrends));
+        const monthlyData = @Html.Raw(Json.Serialize(Model.MonthlyData));
+        const statusData = @Html.Raw(Json.Serialize(Model.OrdersByStatus));
+        const peakHoursData = @Html.Raw(Json.Serialize(Model.PeakHours));
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initDailyTrendsChart();
+            initStatusBreakdownChart();
+            initMonthlyComparisonChart();
+            initPeakHoursChart();
+            animateCounters();
+        });
+
+        // Daily Trends Line Chart with proper responsive sizing
+        function initDailyTrendsChart() {
+            const ctx = document.getElementById('dailyTrendsChart');
+            if (!ctx || !dailyTrendsData.length) return;
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dailyTrendsData.map(d => d.date),
+                    datasets: [
+                        {
+                            label: 'Orders',
+                            data: dailyTrendsData.map(d => d.orderCount),
+                            borderColor: 'rgb(13, 110, 253)',
+                            backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Revenue (R)',
+                            data: dailyTrendsData.map(d => d.revenue),
+                            borderColor: 'rgb(25, 135, 84)',
+                            backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) label += ': ';
+                                    if (context.parsed.y !== null) {
+                                        if (context.datasetIndex === 1) {
+                                            label += 'R ' + context.parsed.y.toLocaleString('en-ZA', {
+                                                minimumFractionDigits: 2,
+                                                maximumFractionDigits: 2
+                                            });
+                                        } else {
+                                            label += context.parsed.y;
+                                        }
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Number of Orders'
+                            },
+                            beginAtZero: true
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Revenue (R)'
+                            },
+                            beginAtZero: true,
+                            grid: {
+                                drawOnChartArea: false,
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Status Breakdown Pie Chart
+        function initStatusBreakdownChart() {
+            const ctx = document.getElementById('statusBreakdownChart');
+            if (!ctx || !statusData.length) return;
+
+            const statusColours = {
+                'New': 'rgb(13, 202, 240)',
+                'Accepted': 'rgb(13, 110, 253)',
+                'Processing': 'rgb(255, 193, 7)',
+                'ReadyForCollection': 'rgb(25, 135, 84)',
+                'Completed': 'rgb(25, 135, 84)',
+                'Declined': 'rgb(220, 53, 69)',
+                'Cancelled': 'rgb(108, 117, 125)',
+                'Pending': 'rgb(255, 193, 7)'
+            };
+
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: statusData.map(s => s.status),
+                    datasets: [{
+                        data: statusData.map(s => s.count),
+                        backgroundColor: statusData.map(s =>
+                            statusColours[s.status] || 'rgb(108, 117, 125)'
+                        ),
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 10,
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const status = statusData[context.dataIndex];
+                                    return [
+                                        `${status.status}: ${status.count} orders`,
+                                        `Revenue: R ${status.revenue.toLocaleString('en-ZA', {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2
+                                        })}`,
+                                        `Percentage: ${status.percentage.toFixed(1)}%`
+                                    ];
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Monthly Comparison Bar Chart
+        function initMonthlyComparisonChart() {
+            const ctx = document.getElementById('monthlyComparisonChart');
+            if (!ctx || !monthlyData.length) return;
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: monthlyData.map(m => m.monthName),
+                    datasets: [{
+                        label: 'Revenue (R)',
+                        data: monthlyData.map(m => m.revenue),
+                        backgroundColor: 'rgba(25, 135, 84, 0.8)',
+                        borderColor: 'rgb(25, 135, 84)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const month = monthlyData[context.dataIndex];
+                                    return [
+                                        `Revenue: R ${month.revenue.toLocaleString('en-ZA', {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2
+                                        })}`,
+                                        `Orders: ${month.orderCount}`
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Revenue (R)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return 'R ' + value.toLocaleString('en-ZA');
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Peak Hours Bar Chart
+        function initPeakHoursChart() {
+            const ctx = document.getElementById('peakHoursChart');
+            if (!ctx || !peakHoursData.length) return;
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: peakHoursData.map(h => h.hourLabel),
+                    datasets: [{
+                        label: 'Orders',
+                        data: peakHoursData.map(h => h.orderCount),
+                        backgroundColor: 'rgba(13, 110, 253, 0.8)',
+                        borderColor: 'rgb(13, 110, 253)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const hour = peakHoursData[context.dataIndex];
+                                    return [
+                                        `Orders: ${hour.orderCount}`,
+                                        `Revenue: R ${hour.revenue.toLocaleString('en-ZA', {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2
+                                        })}`
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Orders'
+                            },
+                            ticks: {
+                                stepSize: 1
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Hour of Day'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Animate counter numbers
+        function animateCounters() {
+            const counters = document.querySelectorAll('.counter');
+            counters.forEach(counter => {
+                const target = parseInt(counter.getAttribute('data-target'));
+                const duration = 2000;
+                const step = target / (duration / 16);
+                let current = 0;
+
+                const timer = setInterval(() => {
+                    current += step;
+                    if (current >= target) {
+                        current = target;
+                        clearInterval(timer);
+                    }
+                    counter.textContent = Math.floor(current).toLocaleString();
+                }, 16);
+            });
+        }
+
+        // PROFESSIONAL CSV EXPORT - Properly formatted for Excel
+        function exportTableToCSV() {
+            const reportTitle = 'Order Trends Report';
+            const dateRange = `Date Range: @Model.StartDate?.ToString("dd MMM yyyy") to @Model.EndDate?.ToString("dd MMM yyyy")`;
+            const exportDate = `Exported: ${new Date().toLocaleDateString('en-ZA')} ${new Date().toLocaleTimeString('en-ZA')}`;
+
+            // Build professional CSV with proper headers
+            let csv = [];
+
+            // Report header section
+            csv.push([reportTitle]);
+            csv.push([dateRange]);
+            csv.push([exportDate]);
+            csv.push([]); // Empty line
+
+            // Summary section
+            csv.push(['SUMMARY STATISTICS']);
+            csv.push(['Total Orders', '@Model.TotalOrders']);
+            csv.push(['Total Revenue', 'R @Model.TotalRevenue.ToString("N2")']);
+            csv.push(['Average Order Value', 'R @Model.AverageOrderValue.ToString("N2")']);
+            csv.push(['Active Customers', '@Model.TotalCustomers']);
+            csv.push([]); // Empty line
+
+            // Daily breakdown section
+            csv.push(['DAILY BREAKDOWN']);
+            csv.push(['Date', 'Orders', 'Revenue', 'Avg Order Value']);
+
+            // Get table data
+            const table = document.getElementById('detailedDataTable');
+            const rows = table.querySelectorAll('tbody tr');
+
+            rows.forEach(row => {
+                const cols = Array.from(row.querySelectorAll('td'));
+                const rowData = [
+                    cols[0].textContent.trim(), // Date
+                    cols[1].textContent.trim().replace(/\D/g, ''), // Orders (remove badge)
+                    cols[2].textContent.trim().replace('R ', '').replace(/,/g, ''), // Revenue (numeric)
+                    cols[3].textContent.trim().replace('R ', '').replace(/,/g, '') // Avg (numeric)
+                ];
+                csv.push(rowData);
+            });
+
+            // Add totals row
+            csv.push([]); // Empty line
+            csv.push(['TOTALS', '@Model.TotalOrders', 'R @Model.TotalRevenue.ToString("N2")', 'R @Model.AverageOrderValue.ToString("N2")']);
+
+            // Convert to CSV format with proper escaping
+            const csvContent = csv.map(row =>
+                row.map(cell => {
+                    // Escape cells containing commas or quotes
+                    const cellStr = String(cell);
+                    if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+                        return `"${cellStr.replace(/"/g, '""')}"`;
+                    }
+                    return cellStr;
+                }).join(',')
+            ).join('\n');
+
+            // Create and trigger download
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            const fileName = `order_trends_report_${new Date().toISOString().slice(0,10)}.csv`;
+
+            link.setAttribute('href', url);
+            link.setAttribute('download', fileName);
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        }
+    </script>
+}

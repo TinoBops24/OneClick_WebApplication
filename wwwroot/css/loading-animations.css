@@ -1,0 +1,366 @@
+﻿/* Global Loading Overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+    .loading-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+.loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.loading-text {
+    font-size: 1.1rem;
+    color: #333;
+    font-weight: 500;
+}
+
+/* ===== PROPER HOURGLASS ANIMATION ===== */
+.loading-spinner.hourglass {
+    position: relative;
+    width: 80px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+    /* Hourglass container */
+    .loading-spinner.hourglass::before {
+        content: '';
+        position: absolute;
+        width: 60px;
+        height: 80px;
+        border: 4px solid #007bff;
+        border-radius: 8px;
+        /* Create the hourglass shape using clip-path */
+        clip-path: polygon( 0% 0%, /* Top left */
+        100% 0%, /* Top right */
+        100% 15%, /* Start narrowing right */
+        55% 50%, /* Middle right (narrow waist) */
+        100% 85%, /* Start widening right */
+        100% 100%, /* Bottom right */
+        0% 100%, /* Bottom left */
+        0% 85%, /* Start widening left */
+        45% 50%, /* Middle left (narrow waist) */
+        0% 15% /* Start narrowing left */
+        );
+        animation: hourglass-rotate 3s ease-in-out infinite;
+    }
+
+    /* Sand in top half */
+    .loading-spinner.hourglass::after {
+        content: '';
+        position: absolute;
+        top: 8px;
+        width: 40px;
+        height: 0px;
+        background: #007bff;
+        border-radius: 0 0 20px 20px;
+        animation: sand-top 3s ease-in-out infinite;
+    }
+
+/* Sand in bottom half (created with pseudo element) */
+@keyframes hourglass-rotate {
+    0%, 40% {
+        transform: rotate(0deg);
+    }
+
+    50%, 90% {
+        transform: rotate(180deg);
+    }
+
+    100% {
+        transform: rotate(180deg);
+    }
+}
+
+@keyframes sand-top {
+    0% {
+        height: 30px;
+        opacity: 1;
+    }
+
+    40% {
+        height: 0px;
+        opacity: 1;
+    }
+
+    50% {
+        height: 0px;
+        opacity: 0;
+    }
+
+    51% {
+        height: 30px;
+        opacity: 0;
+    }
+
+    60% {
+        height: 30px;
+        opacity: 1;
+    }
+
+    100% {
+        height: 0px;
+        opacity: 1;
+    }
+}
+
+/* Alternative: Better Hourglass with SVG-like appearance */
+.loading-spinner.hourglass-v2 {
+    position: relative;
+    width: 80px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+    /* Hourglass frame */
+    .loading-spinner.hourglass-v2::before {
+        content: '';
+        position: absolute;
+        width: 0;
+        height: 0;
+        border-style: solid;
+        /* Top triangle */
+        border-width: 35px 30px 0 30px;
+        border-color: #007bff transparent transparent transparent;
+        top: 10px;
+        animation: hourglass-flip 3s ease-in-out infinite;
+    }
+
+    .loading-spinner.hourglass-v2::after {
+        content: '';
+        position: absolute;
+        width: 0;
+        height: 0;
+        border-style: solid;
+        /* Bottom triangle */
+        border-width: 0 30px 35px 30px;
+        border-color: transparent transparent #007bff transparent;
+        bottom: 10px;
+        animation: hourglass-flip 3s ease-in-out infinite;
+    }
+
+@keyframes hourglass-flip {
+    0%, 45% {
+        transform: rotate(0deg);
+    }
+
+    50%, 95% {
+        transform: rotate(180deg);
+    }
+
+    100% {
+        transform: rotate(180deg);
+    }
+}
+
+/* BEST HOURGLASS (Most Realistic) ===== */
+.loading-spinner.hourglass-best {
+    position: relative;
+    width: 80px;
+    height: 100px;
+    animation: hourglass-full-rotate 4s ease-in-out infinite;
+}
+
+    /* Top bulb */
+    .loading-spinner.hourglass-best::before {
+        content: '';
+        position: absolute;
+        top: 5px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 50px;
+        height: 35px;
+        background: transparent;
+        border: 4px solid #007bff;
+        border-bottom: none;
+        border-radius: 25px 25px 0 0;
+        box-shadow: inset 0 -10px 0 0 #007bff;
+        animation: sand-drain-top 4s ease-in-out infinite;
+    }
+
+    /* Bottom bulb */
+    .loading-spinner.hourglass-best::after {
+        content: '';
+        position: absolute;
+        bottom: 5px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 50px;
+        height: 35px;
+        background: transparent;
+        border: 4px solid #007bff;
+        border-top: none;
+        border-radius: 0 0 25px 25px;
+        box-shadow: inset 0 10px 0 0 transparent;
+        animation: sand-fill-bottom 4s ease-in-out infinite;
+    }
+
+@keyframes hourglass-full-rotate {
+    0%, 45% {
+        transform: rotate(0deg);
+    }
+
+    55%, 95% {
+        transform: rotate(180deg);
+    }
+
+    100% {
+        transform: rotate(180deg);
+    }
+}
+
+@keyframes sand-drain-top {
+    0% {
+        box-shadow: inset 0 -30px 0 0 #007bff;
+    }
+
+    45% {
+        box-shadow: inset 0 0px 0 0 #007bff;
+    }
+
+    55% {
+        box-shadow: inset 0 0px 0 0 #007bff;
+    }
+
+    100% {
+        box-shadow: inset 0 -30px 0 0 #007bff;
+    }
+}
+
+@keyframes sand-fill-bottom {
+    0% {
+        box-shadow: inset 0 10px 0 0 transparent;
+    }
+
+    45% {
+        box-shadow: inset 0 40px 0 0 #007bff;
+    }
+
+    55% {
+        box-shadow: inset 0 40px 0 0 #007bff;
+    }
+
+    100% {
+        box-shadow: inset 0 10px 0 0 transparent;
+    }
+}
+
+/* Narrow middle connector */
+.loading-spinner.hourglass-best {
+    background: linear-gradient(to right, transparent 35%, #007bff 35%, #007bff 37%, transparent 37%), linear-gradient(to right, transparent 63%, #007bff 63%, #007bff 65%, transparent 65%);
+    background-position: center;
+    background-size: 100% 20px;
+    background-repeat: no-repeat;
+}
+
+/* ===== SHOPPING CART ANIMATION ===== */
+.loading-spinner.cart {
+    width: 100px;
+    height: 80px;
+    position: relative;
+    animation: cart-bounce 2s ease-in-out infinite;
+}
+
+    .loading-spinner.cart::before {
+        content: '🛒';
+        font-size: 60px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+@keyframes cart-bounce {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+/* Loading dots */
+.loading-dots {
+    display: flex;
+    gap: 8px;
+    margin-top: 15px;
+}
+
+    .loading-dots span {
+        width: 10px;
+        height: 10px;
+        background: #007bff;
+        border-radius: 50%;
+        animation: dot-bounce 1.4s ease-in-out infinite;
+    }
+
+        .loading-dots span:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .loading-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .loading-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+@keyframes dot-bounce {
+    0%, 80%, 100% {
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
+
+    40% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+}
+
+/* Component-level loaders (inline) */
+.inline-loader {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.spinner-small {
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(0, 123, 255, 0.3);
+    border-top-color: #007bff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

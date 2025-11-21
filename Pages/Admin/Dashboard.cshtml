@@ -1,0 +1,796 @@
+﻿@page
+@model OneClick_WebApp.Pages.Admin.DashboardModel
+@attribute [Authorize(Policy = "AdminOnly")]
+@{
+    ViewData["Title"] = "Dashboard";
+    ViewData["Subtitle"] = "Business overview and key metrics";
+    Layout = "_AdminLayout";
+}
+
+<!-- Date Range Selector -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body py-3">
+                <form method="get" id="dateRangeForm">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <label class="form-label mb-0 fw-bold">
+                                <i class="bi bi-calendar-range me-2"></i>Date Range:
+                            </label>
+                        </div>
+                        <div class="col-md-6">
+                            <select name="DateRange"
+                                    class="form-select"
+                                    onchange="this.form.submit()"
+                                    asp-for="DateRange">
+                                <option value="Today" selected="@(Model.DateRange == "Today")">Today</option>
+                                <option value="Yesterday" selected="@(Model.DateRange == "Yesterday")">Yesterday</option>
+                                <option value="Last7Days" selected="@(Model.DateRange == "Last7Days")">Last 7 Days</option>
+                                <option value="Last30Days" selected="@(Model.DateRange == "Last30Days")">Last 30 Days</option>
+                                <option value="AllTime" selected="@(Model.DateRange == "AllTime")">All Time</option>
+                            </select>
+
+                        </div>
+                        <div class="col-md-3 text-end">
+                            <span class="badge bg-primary px-3 py-2">
+                                <i class="bi bi-calendar-check me-1"></i>
+                                @Model.DateRangeDisplay
+                            </span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Business Metrics Cards -->
+<div class="row mb-4">
+    <!-- Total Revenue Card -->
+    <div class="col-xl-6 col-md-6 mb-4">
+        <div class="card stats-card border-left-success h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Total Revenue
+                        </div>
+                        <div class="h4 mb-0 font-weight-bold text-gray-800">
+                            R <span class="counter" data-target="@((int)Model.TotalRevenue)">0</span>
+                        </div>
+                        <div class="mt-2">
+                            <div class="progress progress-sm">
+                                <div class="progress-bar bg-success revenue-progress" role="progressbar"
+                                     style="width: 0%" aria-valuenow="@Model.TotalRevenue" aria-valuemin="0" aria-valuemax="50000">
+                                </div>
+                            </div>
+                            <small class="text-muted">Target: R 50,000</small>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <div class="stats-icon bg-success">
+                            <i class="bi bi-currency-dollar"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Orders Card -->
+    <div class="col-xl-6 col-md-6 mb-4">
+        <div class="card stats-card border-left-primary h-100">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Total Orders
+                        </div>
+                        <div class="h4 mb-0 font-weight-bold text-gray-800 counter" data-target="@Model.TotalOrders">0</div>
+                        <div class="mt-2 d-flex align-items-center">
+                            <small class="text-muted">
+                                <i class="bi bi-arrow-up text-success me-1"></i>
+                                @Model.OrdersThisMonth this month
+                            </small>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <div class="stats-icon bg-primary">
+                            <i class="bi bi-cart-check"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Customer Segment Details Modal -->
+<div class="modal fade" id="customerSegmentModal" tabindex="-1" aria-labelledby="customerSegmentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="customerSegmentModalLabel">
+                    <i class="bi bi-people me-2"></i>Customer Segment Details
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="customerSegmentLoading" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Loading customer data...</p>
+                </div>
+                <div id="customerSegmentContent" style="display: none;">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Customer</th>
+                                    <th>Email</th>
+                                    <th>Orders</th>
+                                    <th>Total Spent</th>
+                                    <th>First Order</th>
+                                    <th>Last Order</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customerSegmentTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="customerSegmentError" style="display: none;">
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Failed to load customer data. Please try again.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="/Admin/Users" class="btn btn-primary">
+                    <i class="bi bi-people me-1"></i>Manage All Users
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Orders by Status Cards -->
+<div class="row mb-4">
+    <div class="col-12">
+        <h5 class="mb-3">
+            <i class="bi bi-kanban me-2"></i>Orders by Status
+        </h5>
+    </div>
+
+    <!-- New Orders Card -->
+    <div class="col-xl-4 col-md-4 mb-4">
+        <a href="/Admin/Orders?StatusFilter=New&DateFrom=@Model.StartDate.ToString("yyyy-MM-dd")&DateTo=@Model.EndDate.ToString("yyyy-MM-dd")" class="text-decoration-none">
+            <div class="card stats-card border-left-info h-100 stats-card-hover">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                New Orders
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800 counter" data-target="@Model.NewOrdersCount">0</div>
+                            <div class="mt-2">
+                                <span class="badge bg-info">
+                                    <i class="bi bi-plus-circle me-1"></i>Needs Attention
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <div class="stats-icon bg-info">
+                                <i class="bi bi-inbox"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 pt-0">
+                        <small class="text-info">
+                            <i class="bi bi-cursor-fill me-1"></i>Click to view new orders
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Processing Orders Card -->
+    <div class="col-xl-4 col-md-4 mb-4">
+        <a href="/Admin/Orders?StatusFilter=Processing&DateFrom=@Model.StartDate.ToString("yyyy-MM-dd")&DateTo=@Model.EndDate.ToString("yyyy-MM-dd")" class="text-decoration-none">
+            <div class="card stats-card border-left-warning h-100 stats-card-hover">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Processing
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800 counter" data-target="@Model.ProcessingOrdersCount">0</div>
+                            <div class="mt-2">
+                                <span class="badge bg-warning text-dark">
+                                    <i class="bi bi-arrow-repeat me-1"></i>In Progress
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <div class="stats-icon bg-warning">
+                                <i class="bi bi-gear"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 pt-0">
+                        <small class="text-warning">
+                            <i class="bi bi-cursor-fill me-1"></i>Click to view processing orders
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Completed Orders Card -->
+    <div class="col-xl-4 col-md-4 mb-4">
+        <a href="/Admin/Orders?StatusFilter=Completed&DateFrom=@Model.StartDate.ToString("yyyy-MM-dd")&DateTo=@Model.EndDate.ToString("yyyy-MM-dd")" class="text-decoration-none">
+            <div class="card stats-card border-left-success h-100 stats-card-hover">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Completed
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800 counter" data-target="@Model.CompletedOrdersCount">0</div>
+                            <div class="mt-2">
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle me-1"></i>Fulfilled
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <div class="stats-icon bg-success">
+                                <i class="bi bi-check2-circle"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 pt-0">
+                        <small class="text-success">
+                            <i class="bi bi-cursor-fill me-1"></i>Click to view completed orders
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Customer Segments Card -->
+<div class="row mb-4">
+    <div class="col-12">
+        <h5 class="mb-3">
+            <i class="bi bi-people me-2"></i>Customer Insights
+        </h5>
+    </div>
+
+    <div class="col-12 mb-4">
+        <div class="card stats-card border-left-primary h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0">
+                        <i class="bi bi-pie-chart me-2"></i>Customer Segments
+                    </h6>
+                    <small class="text-muted">Based on purchase history</small>
+                </div>
+
+                <div class="row">
+                    <!-- New Buyers -->
+                    <div class="col-md-6 mb-3">
+                        <div class="customer-segment-card" data-segment="new" onclick="showCustomerSegmentDetails('new')" style="cursor: pointer;">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="stats-icon bg-info me-3" style="width: 40px; height: 40px; font-size: 1rem;">
+                                    <i class="bi bi-person-plus"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-info">New Buyers</div>
+                                    <small class="text-muted">First-time customers</small>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="h5 mb-0 counter" data-target="@Model.NewBuyersCount">0</span>
+                                <span class="badge bg-info">@Model.NewBuyersPercentage.ToString("F1")%</span>
+                            </div>
+                            <div class="progress progress-sm mt-2">
+                                <div class="progress-bar bg-info" role="progressbar"
+                                     style="width: @Model.NewBuyersPercentage.ToString("F1")%"
+                                     aria-valuenow="@Model.NewBuyersPercentage" aria-valuemin="0" aria-valuemax="100">
+                                </div>
+                            </div>
+                            <div class="text-center mt-2">
+                                <small class="text-info">
+                                    <i class="bi bi-cursor-fill me-1"></i>Click to view customers
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Frequent Buyers -->
+                    <div class="col-md-6 mb-3">
+                        <div class="customer-segment-card" data-segment="frequent" onclick="showCustomerSegmentDetails('frequent')" style="cursor: pointer;">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="stats-icon bg-warning me-3" style="width: 40px; height: 40px; font-size: 1rem;">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-warning">Frequent Buyers</div>
+                                    <small class="text-muted">Repeat customers</small>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="h5 mb-0 counter" data-target="@Model.FrequentBuyersCount">0</span>
+                                <span class="badge bg-warning text-dark">@Model.FrequentBuyersPercentage.ToString("F1")%</span>
+                            </div>
+                            <div class="progress progress-sm mt-2">
+                                <div class="progress-bar bg-warning" role="progressbar"
+                                     style="width: @Model.FrequentBuyersPercentage.ToString("F1")%"
+                                     aria-valuenow="@Model.FrequentBuyersPercentage" aria-valuemin="0" aria-valuemax="100">
+                                </div>
+                            </div>
+                            <div class="text-center mt-2">
+                                <small class="text-warning">
+                                    <i class="bi bi-cursor-fill me-1"></i>Click to view customers
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-3">
+                    <small class="text-muted">
+                        Total Active Customers: @(Model.NewBuyersCount + Model.FrequentBuyersCount)
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Action Buttons -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-gradient-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="text-white mb-1">Quick Actions</h5>
+                        <p class="text-white-75 mb-0">Frequently used admin tasks</p>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <!-- Site Branding -->
+                        <a href="/Admin/Index" class="btn btn-light btn-sm">
+                            <i class="bi bi-palette me-1"></i>Site Branding
+                        </a>
+
+                        <!-- Pending Orders -->
+                        <a href="/Admin/Orders?StatusFilter=New" class="btn btn-outline-light btn-sm">
+                            <i class="bi bi-clock me-1"></i>New Orders
+                        </a>
+
+                        <!-- All Users -->
+                        <a href="/Admin/Users" class="btn btn-outline-light btn-sm">
+                            <i class="bi bi-people me-1"></i>Manage Users
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Time-based Analytics -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h6 class="mb-0">
+                    <i class="bi bi-bar-chart me-2"></i>
+                    Orders Overview - @Model.DateRangeDisplay
+                </h6>
+                <small class="text-muted">
+                    @Model.TotalOrders orders • R @Model.TotalRevenue.ToString("N0")
+                </small>
+            </div>
+            <div class="card-body">
+                <canvas id="ordersChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-calendar-check me-2"></i>
+                    Quick Stats
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span>Today's Orders:</span>
+                    <span class="badge bg-primary">@Model.OrdersToday</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span>This Week:</span>
+                    <span class="badge bg-info">@Model.OrdersThisWeek</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>This Month:</span>
+                    <span class="badge bg-success">@Model.OrdersThisMonth</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <i class="bi bi-clock-history me-2"></i>
+                    Recent Orders
+                </h6>
+                <a href="/Admin/Orders" class="btn btn-outline-primary btn-sm">View All</a>
+            </div>
+            <div class="card-body">
+                @if (Model.RecentOrders.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Customer</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var order in Model.RecentOrders)
+                                {
+                                    <tr>
+                                        <td>
+                                            <a href="/Admin/Orders/@order.TransactionId" class="text-decoration-none fw-bold">
+                                                #@order.TransactionId
+                                            </a>
+                                        </td>
+                                        <td>@(order.ClientName ?? "Guest")</td>
+                                        <td class="fw-bold text-success">R @order.GrandTotal.ToString("N2")</td>
+                                        <td>
+                                            <span class="badge bg-@(GetStatusBadgeClass(order.OrderStatus))">
+                                                @order.OrderStatus
+                                            </span>
+                                        </td>
+                                        <td>@Model.GetLocalTime(order.Timestamp)</td>
+                                        <td>
+                                            <a href="/Admin/Orders/@order.TransactionId" class="btn btn-outline-primary btn-sm">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-cart-x fs-2 mb-2"></i>
+                        <p>No orders yet</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Chart.js for analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Orders chart
+            const ctx = document.getElementById('ordersChart').getContext('2d');
+            const chartData = @Html.Raw(Json.Serialize(Model.OrdersChartData));
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartData.map(d => d.date),
+                    datasets: [{
+                        label: 'Orders',
+                        data: chartData.map(d => d.orderCount),
+                        borderColor: 'rgb(13, 110, 253)',
+                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                        tension: 0.1,
+                        fill: true
+                    }, {
+                        label: 'Revenue (R)',
+                        data: chartData.map(d => d.revenue),
+                        borderColor: 'rgb(25, 135, 84)',
+                        backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                        tension: 0.1,
+                        fill: true,
+                        yAxisID: 'y1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Orders'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Revenue (R)'
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Daily Orders and Revenue'
+                        }
+                    }
+                }
+            });
+        });
+
+        // Enhanced dashboard interactivity
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate counters
+            function animateCounters() {
+                const counters = document.querySelectorAll('.counter');
+                counters.forEach(counter => {
+                    const target = parseInt(counter.getAttribute('data-target'));
+                    const duration = 2000;
+                    const step = target / (duration / 16);
+                    let current = 0;
+
+                    const timer = setInterval(() => {
+                        current += step;
+                        if (current >= target) {
+                            current = target;
+                            clearInterval(timer);
+                        }
+                        counter.textContent = Math.floor(current).toLocaleString();
+                    }, 16);
+                });
+            }
+
+            // Animate revenue progress bar
+            function animateProgressBar() {
+                const progressBar = document.querySelector('.revenue-progress');
+                if (progressBar) {
+                    const value = parseInt(progressBar.getAttribute('aria-valuenow'));
+                    const max = parseInt(progressBar.getAttribute('aria-valuemax'));
+                    const percentage = Math.min((value / max) * 100, 100);
+
+                    setTimeout(() => {
+                        progressBar.style.width = percentage + '%';
+                    }, 500);
+                }
+            }
+
+            // Initialize animations
+            setTimeout(animateCounters, 300);
+            setTimeout(animateProgressBar, 800);
+
+            // Add click tracking for analytics
+            document.querySelectorAll('.stats-card-hover').forEach(card => {
+                card.addEventListener('click', function(e) {
+                    const cardType = this.querySelector('.text-uppercase').textContent.trim();
+                    console.log(`Dashboard card clicked: ${cardType}`);
+
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 150);
+                });
+            });
+
+            // Add hover effects for customer segment cards
+            document.querySelectorAll('.customer-segment-card').forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-2px)';
+                    this.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
+                    this.style.transition = 'all 0.2s ease';
+                });
+
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                    this.style.boxShadow = 'none';
+                });
+            });
+        });
+
+        // Customer Segment Modal Functions
+        async function showCustomerSegmentDetails(segmentType) {
+            const modal = new bootstrap.Modal(document.getElementById('customerSegmentModal'));
+            const modalTitle = document.getElementById('customerSegmentModalLabel');
+            const loading = document.getElementById('customerSegmentLoading');
+            const content = document.getElementById('customerSegmentContent');
+            const error = document.getElementById('customerSegmentError');
+            const tableBody = document.getElementById('customerSegmentTableBody');
+
+            // Reset modal state
+            loading.style.display = 'block';
+            content.style.display = 'none';
+            error.style.display = 'none';
+
+            // Set modal title
+            const segmentTitle = segmentType === 'new' ? 'New Buyers' : 'Frequent Buyers';
+            modalTitle.innerHTML = `<i class="bi bi-people me-2"></i>${segmentTitle}`;
+
+            modal.show();
+
+            try {
+                const response = await fetch(`/Admin/Dashboard?handler=CustomerSegmentDetails&segmentType=${segmentType}`, {
+                    method: 'GET',
+                    headers: {
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load customer data');
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Clear existing table content
+                    tableBody.innerHTML = '';
+
+                    // Populate table with customer data
+                    data.customers.forEach(customer => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <div class="bg-success rounded-circle d-flex align-items-center justify-content-center"
+                                             style="width: 35px; height: 35px;">
+                                            <i class="bi bi-person-check text-white"></i>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">${customer.displayName}</div>
+                                        <small class="badge bg-success mt-1">
+                                            <i class="bi bi-check-circle me-1"></i>
+                                            Registered Customer
+                                        </small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <a href="mailto:${customer.customerEmail}" class="text-decoration-none">${customer.customerEmail}</a>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">${customer.orderCount}</span>
+                            </td>
+                            <td class="fw-bold text-success">R ${customer.totalSpent.toLocaleString('en-ZA', {minimumFractionDigits: 2})}</td>
+                            <td>${formatDate(customer.firstOrderDate)}</td>
+                            <td>${customer.orderCount > 1 ? formatDate(customer.lastOrderDate) : '-'}</td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+
+                    // Show content
+                    loading.style.display = 'none';
+                    content.style.display = 'block';
+                } else {
+                    throw new Error(data.error || 'Unknown error occurred');
+                }
+            } catch (err) {
+                console.error('Error loading customer segment data:', err);
+                loading.style.display = 'none';
+                error.style.display = 'block';
+            }
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('en-GB', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+            } catch {
+                return '-';
+            }
+        }
+                // Visual feedback when changing date range
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateRangeSelect = document.querySelector('select[name="DateRange"]');
+
+            if (dateRangeSelect) {
+                dateRangeSelect.addEventListener('change', function() {
+                    // Show loading overlay
+                    const loadingOverlay = document.createElement('div');
+                    loadingOverlay.style.cssText = `
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: rgba(255, 255, 255, 0.9);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        z-index: 9999;
+                    `;
+                    loadingOverlay.innerHTML = `
+                        <div class="text-center">
+                            <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="text-primary fw-bold">Updating dashboard data...</p>
+                        </div>
+                    `;
+
+                    document.body.appendChild(loadingOverlay);
+
+                    // Submit form
+                    this.form.submit();
+                });
+            }
+        });
+    </script>
+}
+
+@functions {
+    private string GetStatusBadgeClass(OneClick_WebApp.Models.Enums.OnlineOrderStatus status)
+    {
+        return status switch
+        {
+            OneClick_WebApp.Models.Enums.OnlineOrderStatus.Pending => "warning",
+            OneClick_WebApp.Models.Enums.OnlineOrderStatus.New => "info",
+            OneClick_WebApp.Models.Enums.OnlineOrderStatus.Accepted => "primary",
+            OneClick_WebApp.Models.Enums.OnlineOrderStatus.Processing => "warning",
+            OneClick_WebApp.Models.Enums.OnlineOrderStatus.ReadyForCollection => "success",
+            OneClick_WebApp.Models.Enums.OnlineOrderStatus.Completed => "success",
+            OneClick_WebApp.Models.Enums.OnlineOrderStatus.Declined => "danger",
+            OneClick_WebApp.Models.Enums.OnlineOrderStatus.Cancelled => "secondary",
+            _ => "secondary"
+        };
+    }
+
+}

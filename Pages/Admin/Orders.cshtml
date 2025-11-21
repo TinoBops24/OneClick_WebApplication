@@ -1,0 +1,356 @@
+﻿@page
+@model OneClick_WebApp.Pages.Admin.OrdersModel
+@attribute [Authorize(Policy = "AdminOnly")]
+@{
+    ViewData["Title"] = "Order Management";
+    ViewData["Subtitle"] = $"Managing {Model.TotalCount} orders";
+    Layout = "_AdminLayout";
+}
+
+<!-- Toast Notification Container -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="toast align-items-center text-white bg-success border-0 show" role="alert" aria-live="assertive" aria-atomic="true" id="successToast">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="bi bi-check-circle me-2"></i>
+                    @TempData["SuccessMessage"]
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    }
+    @if (TempData["InfoMessage"] != null)
+    {
+        <div class="toast align-items-center text-white bg-info border-0 show" role="alert" aria-live="assertive" aria-atomic="true" id="infoToast">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="bi bi-info-circle me-2"></i>
+                    @TempData["InfoMessage"]
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    }
+    @if (TempData["WarningMessage"] != null)
+    {
+        <div class="toast align-items-center text-white bg-warning border-0 show" role="alert" aria-live="assertive" aria-atomic="true" id="warningToast">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    @TempData["WarningMessage"]
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="toast align-items-center text-white bg-danger border-0 show" role="alert" aria-live="assertive" aria-atomic="true" id="errorToast">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    @TempData["ErrorMessage"]
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Filters Section -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h6 class="mb-0">
+            <i class="bi bi-funnel me-2"></i>
+            Filter Orders
+        </h6>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="SearchTerm" class="form-label">Search</label>
+                <input type="text" class="form-control" id="SearchTerm" name="SearchTerm"
+                       value="@Model.SearchTerm" placeholder="Order ID, Customer name...">
+            </div>
+            <div class="col-md-2">
+                <label for="StatusFilter" class="form-label">Status</label>
+                <select class="form-select" id="StatusFilter" name="StatusFilter">
+                    <option value="">All Statuses</option>
+                    @foreach (var status in Enum.GetValues<OneClick_WebApp.Models.Enums.OnlineOrderStatus>())
+                    {
+                        <option value="@status" selected="@(Model.StatusFilter == status)">@status</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="DateFrom" class="form-label">From Date</label>
+                <input type="date" class="form-control" id="DateFrom" name="DateFrom"
+                       value="@Model.DateFrom?.ToString("yyyy-MM-dd")">
+            </div>
+            <div class="col-md-2">
+                <label for="DateTo" class="form-label">To Date</label>
+                <input type="date" class="form-control" id="DateTo" name="DateTo"
+                       value="@Model.DateTo?.ToString("yyyy-MM-dd")">
+            </div>
+            <div class="col-md-3 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search me-1"></i>Filter
+                </button>
+                <a href="/Admin/Orders" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Orders Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">
+            <i class="bi bi-list-ul me-2"></i>
+            Orders (@Model.Orders.Count of @Model.TotalCount)
+        </h6>
+        <div class="text-muted small">
+            Page @Model.CurrentPage of @Model.TotalPages
+        </div>
+    </div>
+    <div class="card-body p-0">
+        @if (Model.Orders.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Phone</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Model.Orders)
+                        {
+                            <tr>
+                                <td>
+                                    <a href="/Admin/Orders/@order.TransactionId" class="text-decoration-none fw-bold">
+                                        @order.TransactionId
+                                    </a>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(order.ClientName))
+                                    {
+                                        <div>@order.ClientName</div>
+                                        @if (!string.IsNullOrEmpty(order.ClientId))
+                                        {
+                                            <small class="text-muted">ID: @order.ClientId</small>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Guest</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(order.Phone))
+                                    {
+                                        <a href="tel:@order.Phone" class="text-decoration-none">@order.Phone</a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td class="fw-bold">R @order.GrandTotal.ToString("N2")</td>
+                                <td>
+                                    <span class="badge bg-@(GetStatusBadgeClass(order.OrderStatus))">
+                                        @order.OrderStatus
+                                    </span>
+                                </td>
+                                <td>@Model.GetLocalTime(order.Timestamp)</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="/Admin/Orders/@order.TransactionId" class="btn btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <div class="dropdown">
+                                            <button class="btn btn-outline-secondary dropdown-toggle" type="button"
+                                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="bi bi-three-dots"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                @foreach (var status in Enum.GetValues<OnlineOrderStatus>())
+                                                {
+                                                    @if (status != order.OrderStatus)
+                                                    {
+                                                        <li>
+                                                            <form method="post" action="/Admin/Orders?handler=UpdateStatus" class="d-inline">
+                                                                @Html.AntiForgeryToken()
+                                                                <input type="hidden" name="orderId" value="@order.TransactionId" />
+                                                                <input type="hidden" name="newStatus" value="@status" />
+                                                                <input type="hidden" name="Page" value="@Model.CurrentPage" />
+                                                                <input type="hidden" name="SearchTerm" value="@Model.SearchTerm" />
+                                                                <input type="hidden" name="StatusFilter" value="@Model.StatusFilter" />
+                                                                <input type="hidden" name="DateFrom" value="@Model.DateFrom?.ToString("yyyy-MM-dd")" />
+                                                                <input type="hidden" name="DateTo" value="@Model.DateTo?.ToString("yyyy-MM-dd")" />
+                                                                <button type="submit" class="dropdown-item">
+                                                                    <i class="bi bi-@(GetStatusIcon(status)) me-2"></i>
+                                                                    Mark as @status
+                                                                </button>
+                                                            </form>
+                                                        </li>
+                                                    }
+                                                }
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            @if (Model.TotalPages > 1)
+            {
+                <div class="card-footer">
+                    <nav aria-label="Orders pagination">
+                        <ul class="pagination pagination-sm justify-content-center mb-0">
+                            @if (Model.CurrentPage > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="@GetPageUrl(Model.CurrentPage - 1)">
+                                        <i class="bi bi-chevron-left"></i>
+                                    </a>
+                                </li>
+                            }
+
+                            @for (int i = Math.Max(1, Model.CurrentPage - 2); i <= Math.Min(Model.TotalPages, Model.CurrentPage + 2); i++)
+                            {
+                                <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                    <a class="page-link" href="@GetPageUrl(i)">@i</a>
+                                </li>
+                            }
+
+                            @if (Model.CurrentPage < Model.TotalPages)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="@GetPageUrl(Model.CurrentPage + 1)">
+                                        <i class="bi bi-chevron-right"></i>
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-cart-x fs-1 text-muted mb-3"></i>
+                <h5 class="text-muted">No Orders Found</h5>
+                @if (!string.IsNullOrWhiteSpace(Model.SearchTerm) || Model.StatusFilter.HasValue || Model.DateFrom.HasValue || Model.DateTo.HasValue)
+                {
+                    <p class="text-muted">Try adjusting your filters to see more results.</p>
+                    <a href="/Admin/Orders" class="btn btn-outline-primary">Clear Filters</a>
+                }
+                else
+                {
+                    <p class="text-muted">Orders will appear here once customers start placing them.</p>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-hide toasts after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const successToast = document.getElementById('successToast');
+            const infoToast = document.getElementById('infoToast');
+            const warningToast = document.getElementById('warningToast');
+            const errorToast = document.getElementById('errorToast');
+
+            if (successToast) {
+                setTimeout(function() {
+                    const bsToast = new bootstrap.Toast(successToast);
+                    bsToast.hide();
+                }, 5000);
+            }
+
+            if (infoToast) {
+                setTimeout(function() {
+                    const bsToast = new bootstrap.Toast(infoToast);
+                    bsToast.hide();
+                }, 5000);
+            }
+
+            if (warningToast) {
+                setTimeout(function() {
+                    const bsToast = new bootstrap.Toast(warningToast);
+                    bsToast.hide();
+                }, 5000);
+            }
+
+            if (errorToast) {
+                setTimeout(function() {
+                    const bsToast = new bootstrap.Toast(errorToast);
+                    bsToast.hide();
+                }, 5000);
+            }
+        });
+    </script>
+}
+
+@functions {
+    private string GetStatusBadgeClass(OnlineOrderStatus status)
+    {
+        return status switch
+        {
+            OnlineOrderStatus.Pending => "warning",
+            OnlineOrderStatus.Processing => "info",
+            OnlineOrderStatus.Completed => "success",
+            OnlineOrderStatus.Declined => "danger",
+            _ => "secondary"
+        };
+    }
+
+    private string GetStatusIcon(OnlineOrderStatus status)
+    {
+        return status switch
+        {
+            OnlineOrderStatus.Pending => "clock",
+            OnlineOrderStatus.Processing => "arrow-repeat",
+            OnlineOrderStatus.Completed => "check-circle",
+            OnlineOrderStatus.Declined => "x-circle",
+            _ => "question-circle"
+        };
+    }
+
+    private string GetPageUrl(int page)
+    {
+        var queryParams = new List<string> { $"page={page}" };
+
+        if (!string.IsNullOrWhiteSpace(Model.SearchTerm))
+            queryParams.Add($"SearchTerm={Uri.EscapeDataString(Model.SearchTerm)}");
+
+        if (Model.StatusFilter.HasValue)
+            queryParams.Add($"StatusFilter={Model.StatusFilter}");
+
+        if (Model.DateFrom.HasValue)
+            queryParams.Add($"DateFrom={Model.DateFrom.Value:yyyy-MM-dd}");
+
+        if (Model.DateTo.HasValue)
+            queryParams.Add($"DateTo={Model.DateTo.Value:yyyy-MM-dd}");
+
+        return $"/Admin/Orders?{string.Join("&", queryParams)}";
+    }
+}

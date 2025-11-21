@@ -1,0 +1,352 @@
+﻿@page
+@model OneClick_WebApp.Pages.Admin.SettingsModel
+@attribute [Authorize(Policy = "AdminOnly")]
+@{
+    ViewData["Title"] = "System Settings";
+    ViewData["Subtitle"] = "Configure POS integration and business settings";
+    Layout = "_AdminLayout";
+}
+
+<div class="container-fluid">
+    <!-- Success/Error Messages -->
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>
+            @Model.SuccessMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            @Model.ErrorMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Settings Form -->
+    <form method="post" id="settingsForm">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="row">
+            <!-- POS Integration Settings -->
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-gear me-2"></i>
+                            POS Integration Settings
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Enable POS Integration Toggle -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="form-check form-switch form-check-lg">
+                                    <input asp-for="Input.PosIntegrationEnabled" class="form-check-input" type="checkbox"
+                                           id="posIntegrationToggle" onchange="togglePosSettings()">
+                                    <label asp-for="Input.PosIntegrationEnabled" class="form-check-label fw-bold">
+                                        Enable POS Integration
+                                    </label>
+                                </div>
+                                <small class="text-muted">
+                                    When enabled, online orders will be automatically sent to your POS system
+                                </small>
+                                <span asp-validation-for="Input.PosIntegrationEnabled" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- POS Settings (conditionally visible) -->
+                        <div id="posSettings" style="display: none;">
+                            <div class="mb-3">
+                                <label asp-for="Input.PosSystemType" class="form-label">POS System Type</label>
+                                <select asp-for="Input.PosSystemType" asp-items="Html.GetEnumSelectList<OneClick_WebApp.Models.POSSystemType>()"
+                                        class="form-select">
+                                </select>
+                                <span asp-validation-for="Input.PosSystemType" class="text-danger"></span>
+                            </div>
+
+                            <!-- POS Collection Name section with Branch ID section -->
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="Input.BranchId" class="form-label">Branch ID</label>
+                                    <input asp-for="Input.BranchId" class="form-control" placeholder="default_branch" />
+                                    <span asp-validation-for="Input.BranchId" class="text-danger"></span>
+                                    <small class="text-muted">Used in collection path: onlinesale/{BranchId}/transaction</small>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label asp-for="Input.PosTransactionPrefix" class="form-label">Transaction Prefix</label>
+                                    <input asp-for="Input.PosTransactionPrefix" class="form-control" placeholder="POS" />
+                                    <span asp-validation-for="Input.PosTransactionPrefix" class="text-danger"></span>
+                                </div>
+                            </div>
+
+
+
+                            <div class="mb-3">
+                                <label asp-for="Input.PosNotificationEmail" class="form-label">Notification Email</label>
+                                <input asp-for="Input.PosNotificationEmail" class="form-control" type="email"
+                                       placeholder="pos-notifications@yourcompany.com" />
+                                <span asp-validation-for="Input.PosNotificationEmail" class="text-danger"></span>
+                                <small class="text-muted">Email address to receive POS integration notifications</small>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="form-check">
+                                        <input asp-for="Input.AutoCreatePosTransactions" class="form-check-input" type="checkbox">
+                                        <label asp-for="Input.AutoCreatePosTransactions" class="form-check-label">
+                                            Auto-Create POS Transactions
+                                        </label>
+                                    </div>
+                                    <small class="text-muted">Automatically create transactions in POS when orders are placed</small>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="form-check">
+                                        <input asp-for="Input.EnableStockValidation" class="form-check-input" type="checkbox">
+                                        <label asp-for="Input.EnableStockValidation" class="form-check-label">
+                                            Enable Stock Validation
+                                        </label>
+                                    </div>
+                                    <small class="text-muted">Validate stock levels before processing orders</small>
+                                </div>
+                            </div>
+
+                            <!-- Test Connection Button -->
+                            <div class="d-grid gap-2 mt-3">
+                                <button type="button" class="btn btn-outline-primary" onclick="testPosConnection()">
+                                    <i class="bi bi-wifi me-2"></i>
+                                    Test POS Connection
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Business Settings -->
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-shop me-2"></i>
+                            Business Settings
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label asp-for="Input.BusinessType" class="form-label">Business Type</label>
+                            <select asp-for="Input.BusinessType" asp-items="Html.GetEnumSelectList<OneClick_WebApp.Models.Enums.POSStyle>()"
+                                    class="form-select">
+                            </select>
+                            <span asp-validation-for="Input.BusinessType" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Input.IVAPercentage" class="form-label">Default IVA Percentage</label>
+                                <div class="input-group">
+                                    <input asp-for="Input.IVAPercentage" class="form-control" type="number"
+                                           min="0" max="100" step="0.01" placeholder="17.5" />
+                                    <span class="input-group-text">%</span>
+                                </div>
+                                <span asp-validation-for="Input.IVAPercentage" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Input.StockNotification" class="form-label">Stock Notifications</label>
+                                <select asp-for="Input.StockNotification" asp-items="Html.GetEnumSelectList<OneClick_WebApp.Models.Enums.NotificationType>()"
+                                        class="form-select">
+                                </select>
+                                <span asp-validation-for="Input.StockNotification" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Input.ProductOrderingStyle" class="form-label">Product Ordering Style</label>
+                            <select asp-for="Input.ProductOrderingStyle" asp-items="Html.GetEnumSelectList<OneClick_WebApp.Models.Enums.ProductOrdering>()"
+                                    class="form-select">
+                            </select>
+                            <span asp-validation-for="Input.ProductOrderingStyle" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-check">
+                            <input asp-for="Input.EnableDiscount" class="form-check-input" type="checkbox">
+                            <label asp-for="Input.EnableDiscount" class="form-check-label">
+                                Enable Customer Discounts
+                            </label>
+                        </div>
+                        <small class="text-muted">Allow discount codes and promotional pricing</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuration Summary -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Current Configuration Summary
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <h6>POS Integration Status</h6>
+                                <span id="posStatusBadge" class="badge bg-secondary">Disabled</span>
+                            </div>
+                            <div class="col-md-3">
+                                <h6>Collection Path</h6>
+                                <span class="text-muted" id="collectionPathSummary">onlinesale/@(Model.Input?.BranchId ?? "default_branch")/transaction</span>
+                            </div>
+                            <div class="col-md-3">
+                                <h6>Business Type</h6>
+                                <span class="text-muted" id="businessTypeSummary">@Model.Input?.BusinessType</span>
+                            </div>
+                            <div class="col-md-3">
+                                <h6>IVA Rate</h6>
+                                <span class="text-muted" id="ivaSummary">@(Model.Input?.IVAPercentage ?? 0)%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex gap-2 justify-content-end">
+                    <a href="/Admin/Dashboard" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>
+                        Back to Dashboard
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check2 me-2"></i>
+                        Save Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize POS settings visibility
+            togglePosSettings();
+            updateConfigSummary();
+
+            // Add event listeners
+            document.getElementById('posIntegrationToggle').addEventListener('change', updateConfigSummary);
+        });
+
+        function togglePosSettings() {
+            const isEnabled = document.getElementById('posIntegrationToggle').checked;
+            const posSettings = document.getElementById('posSettings');
+
+            if (isEnabled) {
+                posSettings.style.display = 'block';
+                posSettings.style.opacity = '0';
+                setTimeout(() => {
+                    posSettings.style.transition = 'opacity 0.3s ease-in-out';
+                    posSettings.style.opacity = '1';
+                }, 10);
+            } else {
+                posSettings.style.transition = 'opacity 0.3s ease-in-out';
+                posSettings.style.opacity = '0';
+                setTimeout(() => {
+                    posSettings.style.display = 'none';
+                }, 300);
+            }
+
+            updateConfigSummary();
+        }
+
+        function updateConfigSummary() {
+            const isEnabled = document.getElementById('posIntegrationToggle').checked;
+            const statusBadge = document.getElementById('posStatusBadge');
+
+            if (isEnabled) {
+                statusBadge.className = 'badge bg-success';
+                statusBadge.textContent = 'Enabled';
+            } else {
+                statusBadge.className = 'badge bg-secondary';
+                statusBadge.textContent = 'Disabled';
+            }
+        }
+
+        async function testPosConnection() {
+            const button = event.target;
+            const originalText = button.innerHTML;
+
+            // Show loading state
+            button.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Testing...';
+            button.disabled = true;
+
+            try {
+                const formData = new FormData(document.getElementById('settingsForm'));
+
+                const response = await fetch('/Admin/Settings?handler=TestPosConnection', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('success', 'POS connection test successful!');
+                    button.innerHTML = '<i class="bi bi-check-circle me-2"></i>Connection OK';
+                    button.className = 'btn btn-success';
+                } else {
+                    showAlert('danger', 'POS connection test failed: ' + result.message);
+                    button.innerHTML = '<i class="bi bi-x-circle me-2"></i>Connection Failed';
+                    button.className = 'btn btn-danger';
+                }
+
+                // Reset button after 3 seconds
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.className = 'btn btn-outline-primary';
+                    button.disabled = false;
+                }, 3000);
+
+            } catch (error) {
+                showAlert('danger', 'Error testing connection: ' + error.message);
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        }
+
+        function showAlert(type, message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                <i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+
+            document.querySelector('.container-fluid').insertBefore(alertDiv, document.querySelector('form'));
+
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+    </script>
+}

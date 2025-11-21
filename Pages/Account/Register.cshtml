@@ -1,0 +1,814 @@
+﻿@page
+@model OneClick_WebApp.Pages.Account.RegisterModel
+@{
+    ViewData["Title"] = "Register";
+}
+
+<style>
+    /* Hide default ASP.NET validation messages */
+    span[data-valmsg-for] {
+        display: none !important;
+    }
+
+    .validation-summary-errors {
+        display: none !important;
+    }
+
+    .page-wrapper {
+        min-height: calc(100vh - 140px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2.0rem;
+        margin-top: 160px;
+    }
+
+    .register-container {
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(10px);
+        padding: 1.75rem 2.25rem;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        max-width: 380px;
+        width: 100%;
+        transition: box-shadow 0.3s ease-in-out;
+    }
+
+        .register-container:hover {
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
+        }
+
+    h1 {
+        font-weight: 700;
+        font-size: 1.75rem;
+        margin-bottom: 0.5rem;
+        color: #212529;
+        text-align: center;
+        letter-spacing: 0.03em;
+    }
+
+    h2 {
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: #495057;
+        margin-bottom: 1.25rem;
+        text-align: center;
+    }
+
+    .form-floating {
+        margin-bottom: 0.875rem !important;
+    }
+
+    .form-floating > input {
+        border-radius: 0.5rem;
+        box-shadow: none !important;
+        border: 1.5px solid #ced4da;
+        transition: border-color 0.3s ease;
+        font-size: 0.95rem;
+        padding: 0.75rem 0.75rem;
+    }
+
+        .form-floating > input:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 8px rgba(13, 110, 253, 0.3) !important;
+        }
+
+    .form-floating > label {
+        padding: 0.75rem 0.75rem;
+        font-size: 0.95rem;
+    }
+
+    .btn-primary {
+        border-radius: 50px;
+        font-weight: 600;
+        padding: 0.65rem 0;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        margin-top: 0.5rem;
+    }
+
+        .btn-primary:hover,
+        .btn-primary:focus {
+            background-color: #084298;
+            border-color: #084298;
+            box-shadow: 0 4px 15px rgba(8, 66, 152, 0.4);
+            transform: translateY(-1px);
+        }
+
+    /* Toast Notification System */
+    .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        max-width: 400px;
+        pointer-events: none;
+    }
+
+    .toast {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        margin-bottom: 12px;
+        padding: 16px 20px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        pointer-events: auto;
+        opacity: 0;
+        transform: translateX(100%);
+        transition: all 0.3s ease-in-out;
+        border-left: 4px solid #e5e7eb;
+        max-width: 100%;
+        word-wrap: break-word;
+    }
+
+    .toast.show {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    .toast.hide {
+        opacity: 0;
+        transform: translateX(100%);
+        margin-bottom: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        max-height: 0;
+    }
+
+    .toast.success {
+        border-left-color: #10b981;
+        background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+    }
+
+    .toast.error {
+        border-left-color: #ef4444;
+        background: linear-gradient(135deg, #fef2f2 0%, #fef2f2 100%);
+    }
+
+    .toast.warning {
+        border-left-color: #f59e0b;
+        background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    }
+
+    .toast.info {
+        border-left-color: #3b82f6;
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    }
+
+    .toast-icon {
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+    .toast.success .toast-icon {
+        color: #10b981;
+    }
+
+    .toast.error .toast-icon {
+        color: #ef4444;
+    }
+
+    .toast.warning .toast-icon {
+        color: #f59e0b;
+    }
+
+    .toast.info .toast-icon {
+        color: #3b82f6;
+    }
+
+    .toast-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .toast-title {
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 4px;
+        color: #111827;
+        line-height: 1.2;
+    }
+
+    .toast-message {
+        font-size: 13px;
+        color: #6b7280;
+        line-height: 1.4;
+        margin: 0;
+    }
+
+    .toast-close {
+        background: none;
+        border: none;
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        color: #9ca3af;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+        .toast-close:hover {
+            background: rgba(0, 0, 0, 0.1);
+            color: #374151;
+        }
+
+    /* Field Error Styling */
+    .field-error {
+        color: #ef4444;
+        font-size: 11px;
+        margin-top: 4px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        opacity: 0;
+        transform: translateY(-4px);
+        transition: all 0.2s ease;
+    }
+
+        .field-error.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+    .field-error-icon {
+        width: 12px;
+        height: 12px;
+        flex-shrink: 0;
+    }
+
+    .form-floating > input.error {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 1px #ef4444 !important;
+    }
+
+    .form-floating > input.success {
+        border-color: #10b981 !important;
+    }
+
+    /* Password Strength Indicator */
+    .password-strength {
+        margin-top: 6px;
+        font-size: 11px;
+    }
+
+    .strength-meter {
+        height: 3px;
+        background: #e5e7eb;
+        border-radius: 2px;
+        overflow: hidden;
+        margin-bottom: 4px;
+    }
+
+    .strength-fill {
+        height: 100%;
+        transition: all 0.3s ease;
+        border-radius: 2px;
+    }
+
+    .strength-weak .strength-fill {
+        width: 25%;
+        background: #ef4444;
+    }
+
+    .strength-fair .strength-fill {
+        width: 50%;
+        background: #f59e0b;
+    }
+
+    .strength-good .strength-fill {
+        width: 75%;
+        background: #3b82f6;
+    }
+
+    .strength-strong .strength-fill {
+        width: 100%;
+        background: #10b981;
+    }
+
+    /* Loading Button States */
+    .btn-loading {
+        position: relative;
+        color: transparent !important;
+    }
+
+        .btn-loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+    @@keyframes spin {
+        0% { transform: translate(-50%, -50%) rotate(0deg); }
+        100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    .text-center a {
+        color: #0d6efd;
+        text-decoration: none;
+        transition: color 0.2s ease;
+        font-size: 0.9rem;
+    }
+
+    .text-center a:hover {
+        color: #084298;
+        text-decoration: underline;
+    }
+
+    @@media (max-width: 640px) {
+        .toast-container {
+            left: 12px;
+            right: 12px;
+            top: 12px;
+            max-width: none;
+        }
+
+        .toast {
+            padding: 14px 16px;
+        }
+
+        .register-container {
+            padding: 1.5rem 1.5rem;
+        }
+
+        .page-wrapper {
+            padding: 1rem;
+        }
+    }
+</style>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="page-wrapper">
+    <div class="register-container shadow-sm">
+        <h1>@ViewData["Title"]</h1>
+        <form id="registerForm" method="post" novalidate>
+            <h2>Create a new account.</h2>
+            <hr />
+
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Input.Name" class="form-control" autocomplete="name" placeholder="Full Name" aria-required="true" id="nameInput" />
+                <label asp-for="Input.Name">Full Name</label>
+                <div class="field-error" id="nameError">
+                    <svg class="field-error-icon" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span>Full name is required.</span>
+                </div>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Input.Email" class="form-control" autocomplete="username" placeholder="name@example.com" aria-required="true" id="emailInput" />
+                <label asp-for="Input.Email">Email address</label>
+                <div class="field-error" id="emailError">
+                    <svg class="field-error-icon" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span>Please enter a valid email address.</span>
+                </div>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Input.Password" type="password" class="form-control" autocomplete="new-password" placeholder="Password" aria-required="true" id="passwordInput" />
+                <label asp-for="Input.Password">Password</label>
+                <div class="field-error" id="passwordError">
+                    <svg class="field-error-icon" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span>Password must be at least 8 characters with uppercase, lowercase, number, and special character.</span>
+                </div>
+                <div class="password-strength" id="passwordStrength" style="display: none;">
+                    <div class="strength-meter">
+                        <div class="strength-fill"></div>
+                    </div>
+                    <span class="strength-text">Password strength: <span class="strength-label">Weak</span></span>
+                </div>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Input.ConfirmPassword" type="password" class="form-control" autocomplete="new-password" placeholder="Confirm Password" aria-required="true" id="confirmPasswordInput" />
+                <label asp-for="Input.ConfirmPassword">Confirm Password</label>
+                <div class="field-error" id="confirmPasswordError">
+                    <svg class="field-error-icon" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span>Passwords do not match.</span>
+                </div>
+            </div>
+
+            <button id="registerSubmit" type="submit" class="btn btn-primary w-100 mb-2">Register</button>
+
+            <div class="text-center mt-3">
+                <p><a href="/Account/Login">Already have an account? Sign in</a></p>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        // Toast Notification System
+        class ToastManager {
+            constructor() {
+                this.container = document.getElementById('toastContainer');
+                this.toasts = new Set();
+            }
+
+            show(type, title, message, duration = 5000) {
+                const toast = this.createToast(type, title, message);
+                this.container.appendChild(toast);
+                this.toasts.add(toast);
+
+                requestAnimationFrame(() => {
+                    toast.classList.add('show');
+                });
+
+                if (duration > 0) {
+                    setTimeout(() => {
+                        this.dismiss(toast);
+                    }, duration);
+                }
+
+                return toast;
+            }
+
+            createToast(type, title, message) {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                
+                const icon = this.getIcon(type);
+                
+                toast.innerHTML = `
+                    ${icon}
+                    <div class="toast-content">
+                        <div class="toast-title">${title}</div>
+                        <p class="toast-message">${message}</p>
+                    </div>
+                    <button class="toast-close" onclick="toastManager.dismiss(this.parentElement)">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                    </button>
+                `;
+
+                return toast;
+            }
+
+            getIcon(type) {
+                const icons = {
+                    success: '<svg class="toast-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>',
+                    error: '<svg class="toast-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>',
+                    warning: '<svg class="toast-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>',
+                    info: '<svg class="toast-icon" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>'
+                };
+                return icons[type] || icons.info;
+            }
+
+            dismiss(toast) {
+                if (!this.toasts.has(toast)) return;
+                
+                toast.classList.remove('show');
+                toast.classList.add('hide');
+                
+                setTimeout(() => {
+                    if (toast.parentElement) {
+                        toast.parentElement.removeChild(toast);
+                    }
+                    this.toasts.delete(toast);
+                }, 300);
+            }
+
+            success(title, message, duration) {
+                return this.show('success', title, message, duration);
+            }
+
+            error(title, message, duration) {
+                return this.show('error', title, message, duration);
+            }
+
+            warning(title, message, duration) {
+                return this.show('warning', title, message, duration);
+            }
+
+            info(title, message, duration) {
+                return this.show('info', title, message, duration);
+            }
+        }
+
+        // Form Validation System
+        class FormValidator {
+            static showFieldError(inputElement, message) {
+                const errorElement = inputElement.parentElement.querySelector('.field-error');
+                if (errorElement) {
+                    errorElement.querySelector('span').textContent = message;
+                    errorElement.classList.add('show');
+                    inputElement.classList.add('error');
+                    inputElement.setAttribute('aria-invalid', 'true');
+                }
+            }
+
+            static hideFieldError(inputElement) {
+                const errorElement = inputElement.parentElement.querySelector('.field-error');
+                if (errorElement) {
+                    errorElement.classList.remove('show');
+                    inputElement.classList.remove('error');
+                    inputElement.classList.add('success');
+                    inputElement.setAttribute('aria-invalid', 'false');
+                }
+            }
+
+            static validateName(name) {
+                return name && name.trim().length >= 2 && name.trim().length <= 100;
+            }
+
+            static validateEmail(email) {
+                const emailRegex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
+                return emailRegex.test(email);
+            }
+
+            static validatePassword(password) {
+                const hasUpperCase = /[A-Z]/.test(password);
+                const hasLowerCase = /[a-z]/.test(password);
+                const hasNumbers = /\d/.test(password);
+                const hasSpecialChar = /[@@$!%*?&]/.test(password);
+                const hasMinLength = password.length >= 8;
+
+                return {
+                    isValid: hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChar && hasMinLength,
+                    strength: this.getPasswordStrength(password),
+                    hasUpperCase,
+                    hasLowerCase,
+                    hasNumbers,
+                    hasSpecialChar,
+                    hasMinLength
+                };
+            }
+
+            static getPasswordStrength(password) {
+                let score = 0;
+                if (password.length >= 8) score++;
+                if (/[a-z]/.test(password)) score++;
+                if (/[A-Z]/.test(password)) score++;
+                if (/[0-9]/.test(password)) score++;
+                if (/[@@$!%*?&]/.test(password)) score++;
+
+                if (score <= 2) return { level: 'weak', label: 'Weak' };
+                if (score === 3) return { level: 'fair', label: 'Fair' };
+                if (score === 4) return { level: 'good', label: 'Good' };
+                return { level: 'strong', label: 'Strong' };
+            }
+
+            static validatePasswordMatch(password, confirmPassword) {
+                return password === confirmPassword;
+            }
+        }
+
+        // Password Strength Indicator
+        class PasswordStrengthIndicator {
+            constructor(passwordInput, strengthContainer) {
+                this.passwordInput = passwordInput;
+                this.strengthContainer = strengthContainer;
+                this.strengthMeter = strengthContainer.querySelector('.strength-meter');
+                this.strengthLabel = strengthContainer.querySelector('.strength-label');
+            }
+
+            update(password) {
+                if (!password) {
+                    this.strengthContainer.style.display = 'none';
+                    return;
+                }
+
+                this.strengthContainer.style.display = 'block';
+                const strength = FormValidator.getPasswordStrength(password);
+                
+                this.strengthMeter.className = `strength-meter strength-${strength.level}`;
+                this.strengthLabel.textContent = strength.label;
+            }
+        }
+
+        // Initialize
+        const toastManager = new ToastManager();
+
+        // Pre-populate email from URL parameter if present
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const email = urlParams.get('email');
+            
+            if (email && emailInput.value === '') {
+                emailInput.value = email;
+                emailInput.dispatchEvent(new Event('input')); // Trigger validation
+                nameInput.focus(); // Focus on first empty field
+            }
+        });
+        
+        const nameInput = document.getElementById('nameInput');
+        const emailInput = document.getElementById('emailInput');
+        const passwordInput = document.getElementById('passwordInput');
+        const confirmPasswordInput = document.getElementById('confirmPasswordInput');
+        const registerButton = document.getElementById('registerSubmit');
+        
+        const passwordStrength = new PasswordStrengthIndicator(
+            passwordInput, 
+            document.getElementById('passwordStrength')
+        );
+
+        // Real-time validation
+        nameInput.addEventListener('input', function() {
+            if (this.value && !FormValidator.validateName(this.value)) {
+                FormValidator.showFieldError(this, 'Full name must be between 2 and 100 characters.');
+            } else if (this.value) {
+                FormValidator.hideFieldError(this);
+            }
+        });
+
+        emailInput.addEventListener('input', function() {
+            if (this.value && !FormValidator.validateEmail(this.value)) {
+                FormValidator.showFieldError(this, 'Please enter a valid email address.');
+            } else if (this.value) {
+                FormValidator.hideFieldError(this);
+            }
+        });
+
+        passwordInput.addEventListener('input', function() {
+            passwordStrength.update(this.value);
+            
+            if (this.value) {
+                const validation = FormValidator.validatePassword(this.value);
+                if (!validation.isValid) {
+                    let errorMsg = 'Password must contain: ';
+                    const missing = [];
+                    if (!validation.hasMinLength) missing.push('8+ characters');
+                    if (!validation.hasUpperCase) missing.push('uppercase letter');
+                    if (!validation.hasLowerCase) missing.push('lowercase letter');
+                    if (!validation.hasNumbers) missing.push('number');
+                    if (!validation.hasSpecialChar) missing.push('special character');
+                    
+                    FormValidator.showFieldError(this, errorMsg + missing.join(', '));
+                } else {
+                    FormValidator.hideFieldError(this);
+                }
+            }
+
+            // Check confirm password match
+            if (confirmPasswordInput.value) {
+                if (FormValidator.validatePasswordMatch(this.value, confirmPasswordInput.value)) {
+                    FormValidator.hideFieldError(confirmPasswordInput);
+                } else {
+                    FormValidator.showFieldError(confirmPasswordInput, 'Passwords do not match.');
+                }
+            }
+        });
+
+        confirmPasswordInput.addEventListener('input', function() {
+            if (this.value) {
+                if (FormValidator.validatePasswordMatch(passwordInput.value, this.value)) {
+                    FormValidator.hideFieldError(this);
+                } else {
+                    FormValidator.showFieldError(this, 'Passwords do not match.');
+                }
+            }
+        });
+
+        // Form submission
+        document.getElementById('registerForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const name = nameInput.value.trim();
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+
+            // Validate all fields
+            let hasErrors = false;
+
+            if (!FormValidator.validateName(name)) {
+                FormValidator.showFieldError(nameInput, 'Full name must be between 2 and 100 characters.');
+                hasErrors = true;
+            } else {
+                FormValidator.hideFieldError(nameInput);
+            }
+
+            if (!FormValidator.validateEmail(email)) {
+                FormValidator.showFieldError(emailInput, 'Please enter a valid email address.');
+                hasErrors = true;
+            } else {
+                FormValidator.hideFieldError(emailInput);
+            }
+
+            const passwordValidation = FormValidator.validatePassword(password);
+            if (!passwordValidation.isValid) {
+                FormValidator.showFieldError(passwordInput, 'Password does not meet requirements.');
+                hasErrors = true;
+            } else {
+                FormValidator.hideFieldError(passwordInput);
+            }
+
+            if (!FormValidator.validatePasswordMatch(password, confirmPassword)) {
+                FormValidator.showFieldError(confirmPasswordInput, 'Passwords do not match.');
+                hasErrors = true;
+            } else {
+                FormValidator.hideFieldError(confirmPasswordInput);
+            }
+
+            if (hasErrors) {
+                toastManager.error('Validation Failed', 'Please correct the errors above before continuing.');
+                return;
+            }
+
+            registerButton.disabled = true;
+            registerButton.classList.add('btn-loading');
+
+            try {
+                // Check email availability first
+                const emailCheckResponse = await fetch('/Account/Register?handler=CheckEmail', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+
+                if (!emailCheckResponse.ok) {
+                    const errorText = await emailCheckResponse.text();
+                    throw new Error(errorText);
+                }
+
+                const emailCheckResult = await emailCheckResponse.json();
+
+                if (emailCheckResult.isErpUser) {
+                    if (emailCheckResult.hasPassword) {
+                        FormValidator.showFieldError(emailInput, 'This email is already registered.');
+                        toastManager.error('Email Already Registered', 'This email is already registered. Please use the login page.');
+                        return;
+                    } else {
+                        toastManager.info('Account Setup Required', 'Redirecting to password setup...');
+                        setTimeout(() => {
+                            window.location.href = emailCheckResult.redirectUrl;
+                        }, 1500);
+                        return;
+                    }
+                }
+
+                // Create account
+                const response = await fetch('/Account/Register?handler=CreateAccount', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        name: name,
+                        password: password
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText);
+                }
+
+                const result = await response.json();
+
+                if (result.success) {
+                    toastManager.success('Welcome!', result.message || 'Account created successfully!');
+                    setTimeout(() => {
+                        window.location.href = result.redirectUrl || '/';
+                    }, 1500);
+                } else {
+                    throw new Error(result.message || 'Registration failed');
+                }
+
+            } catch (error) {
+                console.error('Registration error:', error);
+                toastManager.error('Registration Failed', error.message || 'An unexpected error occurred. Please try again.');
+            } finally {
+                registerButton.disabled = false;
+                registerButton.classList.remove('btn-loading');
+            }
+        });
+    </script>
+}

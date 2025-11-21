@@ -1,0 +1,18 @@
+﻿@page
+@model OneClick_WebApp.Pages.Account.LogoutModel
+@{
+    ViewData["Title"] = "Log out";
+}
+
+<header>
+    <h1>@ViewData["Title"]</h1>
+    <p>You are being logged out. You will be redirected shortly.</p>
+</header>
+
+@section Scripts {
+    <script type="module" src="~/js/firebase-auth.js"></script>
+    <script>
+        // Immediately call the logout function when the page loads.
+        window.logoutUser();
+    </script>
+}
