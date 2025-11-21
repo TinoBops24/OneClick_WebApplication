@@ -1,8 +1,7 @@
-﻿OneClick WebApp
+﻿
 This is a full-stack e-commerce platform built using ASP.NET Core Razor Pages with Firebase. The goal is to help businesses move online and connect their website with their in-store systems.
 
 
-Overview
 The platform pulls all product information from the business’s ERP system and displays it on the website. When a customer places an order on the site or through WhatsApp, the order is sent straight to the POS system so staff can process it. This keeps online and in-store operations in sync.
 The system supports two main groups of users: ERP users (admins, managers, and staff) and normal online customers.
 
